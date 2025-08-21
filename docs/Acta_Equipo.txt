@@ -1,6 +1,6 @@
 Integrantes:
 Gala Reyes y Ramos
 Camila Migale
-Mauricio Fernandez
+Mauricio Fernandez: Lograr usar git correctamente para codear en grupo y aprender mas sobre python.   
 Valentina Merlo
 Tomas Jarolaski
