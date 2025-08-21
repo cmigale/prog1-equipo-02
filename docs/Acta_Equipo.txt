@@ -1,6 +1,6 @@
 Integrantes:
 Gala Reyes y Ramos
-Camila Migale
+Camila Migale. Objetivo personal: Aprender a llevar a cabo un desarrollo en equipo y seguir aprendiendo de python y Git.
 Mauricio Fernandez
 Valentina Merlo
 Tomas Jarolaski
