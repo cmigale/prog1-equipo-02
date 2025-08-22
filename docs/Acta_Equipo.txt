@@ -1,5 +1,5 @@
 Integrantes:
-Gala Reyes y Ramos
+Gala Reyes y Ramos. Objetivo: Aprender a desarrollar software.
 Camila Migale. Objetivo personal: Aprender a llevar a cabo un desarrollo en equipo y seguir aprendiendo de python y Git.
 Mauricio Fernandez: Lograr usar git correctamente para codear en grupo y aprender mas sobre python.   
 Valentina Merlo: Quiero aprender para aprobar y reflejarlo en mi trabajo
