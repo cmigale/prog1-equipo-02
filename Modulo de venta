@@ -1,1 +1,145 @@
+"""
+Stock
+===================================
+"""
+import random
+stock=[]
+
+def añadirProducto(x,y,w):
+    z=random.randint(100000,999999)
+    repetido=1
+    while repetido:
+        repetido=0
+        for producto in stock:
+            if producto["codigo"]==z:
+                repetido=1
+                z=random.randint(100000,999999)
+    producto={"codigo":z,"producto":x,"cantidad en stock":y,"Precio Unitario":w}
+    stock.append(producto)
+    print("¡",x,"añadido al stock con éxito!")
+
+
+# Buscar Producto
+def buscar_producto(entrada):
+    entrada=str(entrada).lower()
+    for producto in stock:
+        if str(producto["codigo"])==entrada or producto["producto"].lower()==entrada:
+            return producto
+    return None
+
+
+"""
+VENTAS
+===============================
+"""
+ifagregar=int(input("Ingrese un 1 si quiere agregar un producto, 0 en caso contrario:"))
+while ifagregar!=1 and ifagregar!=0:
+    ifagregar=int(input("Ingrese un 1 si quiere agregar un producto, 0 en caso contrario:"))
+if ifagregar==1:
+    while ifagregar==1:
+        aprod=input("Ingrese el producto que quiere agregar al stock:")
+        if len(stock)>1:
+            if buscar_valor_matriz(aprod,stock)!=-1:
+                aprod=input("El producto ya se encuentra en la matriz, ingrese otro producto:")
+        acant=int(input("Ingrese la cantidad disponible del producto:"))
+        aprecio=int(input("Ingrese el precio unitario del producto:"))
+        añadirProducto(aprod,acant,aprecio)
+        ifagregar=int(input("Ingrese un 1 si quiere agregar un producto, 0 en caso contrario:"))
+        while ifagregar!=1 and ifagregar!=0:
+            ifagregar=int(input("Ingrese un 1 si quiere agregar un producto, 0 en caso contrario:"))
+
+def nueva_venta():
+    venta=[]
+    while True:
+        print("\nMenu de venta:")
+        print("1. Agregar producto")
+        print("2. Eliminar producto")
+        print("3. Finalizar venta")
+
+        opcion=input("Seleccione una opción: ")
+
+        if opcion=="1":
+            print("\n------ Stock Disponible ------")
+            for p in stock:
+                print(f"Codigo:{p['codigo']}-{p['producto']} "
+                      f"(stock:{p['cantidad en stock']},precio:${p['Precio Unitario']})")
+            entrada=input("Ingrese el código o nombre del producto: ")
+            producto=buscar_producto(entrada)
+
+            if producto:
+                if not any(p["codigo"]==producto["codigo"] for p in venta):
+                    try:
+                        cantidad=int(input("Cantidad: "))
+                        if cantidad>0:
+                            if cantidad<=producto["cantidad en stock"]:
+# Actualizar stock
+                                producto["cantidad en stock"]-=cantidad
+
+# Agregar a la venta
+                                subtotal=cantidad*producto["Precio Unitario"]
+                                venta.append({
+                                    "codigo": producto["codigo"],
+                                    "producto": producto["producto"],
+                                    "cantidad": cantidad,
+                                    "precio": producto["Precio Unitario"],
+                                    "subtotal": subtotal
+                                })
+                                print(f"{producto['producto']} agregado con subtotal ${subtotal}")
+                            else:
+                                print("Error: no hay stock suficiente.")
+                        else:
+                            print("La cantidad debe ser mayor a 0.")
+                    except ValueError:
+                        print("Error: debe ingresar un número entero valido.")
+                else:
+                    print("Error: este producto ya está en la venta.")
+            else:
+                print("Error: producto no encontrado.")
+
+        elif opcion=="2":
+            if not venta:
+                print("No hay productos para eliminar.")
+            else:
+                print("\nLista de productos en la venta:")
+                for i,p in enumerate(venta,start=1):
+                    print(i,"-",p["producto"],"x",p["cantidad"],"=",p["subtotal"])
+                try:
+                    eliminar=int(input("Numero de producto a eliminar: "))
+                    borrado=venta.pop(eliminar-1)
+
+# Actualizar stock
+                    for prod in stock:
+                        if prod["codigo"]==borrado["codigo"]:
+                            prod["cantidad en stock"]+=borrado["cantidad"]
+                            break
+                    print(f"{borrado['producto']} eliminado y stock restaurado.")
+                except (ValueError, IndexError):
+                    print("Opción inválida.")
+
+        elif opcion=="3":
+            print("\nResumen de la venta:")
+            total=sum(p["subtotal"] for p in venta)
+            for p in venta:
+                print(f"{p['codigo']}-{p['producto']}x{p['cantidad']}=${p['subtotal']}")
+            print("Total de la venta: $",total)
+            break
+        else:
+            print("Opción inválida, intente nuevamente.")
+
+
+"""
+PROGRAMA PRINCIPAL
+===============================
+"""
+while True:
+    accion=input("\nEscriba 'nueva' para iniciar una venta o 'salir' para terminar: ").lower()
+    if accion=="nueva":
+        nueva_venta()
+    elif accion=="salir":
+        print("Programa finalizado")
+        break
+    else:
+        print("Comando no reconocido")
+
+ 
 
