@@ -1,0 +1,127 @@
+from datetime import datetime
+
+def generar_ticket():
+    print("="*35)
+
+    # Fecha actual
+    fecha = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    print("Fecha:", fecha)
+    print("="*35)
+
+    #carga de productos
+    productos = []
+    continuar = "s"
+
+    while continuar.lower() == "s":
+        nombre = input("Nombre del producto: ")
+        precio_str = input("Precio unitario: $")
+        cantidad_str = input("Cantidad: ")
+
+        if not nombre:
+            print("Debe ingresar un nombre.")
+        elif not precio_str.replace(".", "", 1).isdigit():
+            print("Precio inválido. Intente nuevamente.")
+        elif not cantidad_str.isdigit():
+            print("Cantidad inválida. Intente nuevamente.")
+        else:
+            precio = float(precio_str)
+            cantidad = int(cantidad_str)
+            subtotal = precio * cantidad
+            productos.append((nombre, precio, cantidad, subtotal))
+
+        continuar = input("¿Desea agregar otro producto? (s/n): ")
+
+
+    # Si no se ingresaron productos
+    if len(productos) == 0:
+        print("No se ingresaron productos.")
+        return
+
+    # Calcular subtotal general
+    total = sum(p[3] for p in productos)
+
+       # Selección del método de pago
+    print("\nMétodo de pago:")
+    print("1. Efectivo (10% descuento)")
+    print("2. Billetera virtual (10% descuento)")
+    print("3. Crédito (3, 6 o 12 cuotas con recargo)")
+    print("4. Débito (sin recargo)")
+    metodo = input("Seleccione método (1-4): ")
+
+    descuento = 0
+    recargo = 0
+    detalle_pago = ""
+
+    if metodo == "1":
+        descuento = total * 0.10
+        detalle_pago = "Efectivo (10% descuento)"
+    elif metodo == "2":
+        descuento = total * 0.10
+        detalle_pago = "Billetera virtual (10% descuento)"
+    elif metodo == "3":
+        cuotas = input("Ingrese cuotas (3, 6 o 12): ")
+        if cuotas.isdigit() and int(cuotas) in (3, 6, 12):
+            cuotas = int(cuotas)
+            if cuotas == 3:
+                recargo = total * 0.03
+            elif cuotas == 6:
+                recargo = total * 0.05
+            elif cuotas == 12:
+                recargo = total * 0.08
+            detalle_pago = f"Crédito ({cuotas} cuotas con recargo)"
+        else:
+            print("Cuotas inválidas. Operación cancelada.")
+            return
+    elif metodo == "4":
+        detalle_pago = "Débito (sin recargo)"
+    else:
+        print("Opción no válida. Se cobra sin descuento ni recargo.")
+        detalle_pago = "Método no identificado"
+
+
+    total_final = total - descuento + recargo
+
+    # Monto del cliente
+    monto_str = input("\nMonto entregado por el cliente: $")
+    if not monto_str.replace(".", "", 1).isdigit():
+        print("Monto inválido.")
+        return
+    monto_cliente = float(monto_str)
+
+    # Calcular vuelto
+    if monto_cliente < total_final:
+        diferencia = total_final - monto_cliente
+        vuelto = 0
+        print("Monto insuficiente. Faltan ${round(diferencia, 2)}.")
+    else:
+        vuelto = monto_cliente - total_final
+
+ 
+    # --------------Ticket final-------------------------------------------------------
+   
+    print("\n" + "="*35)
+    print("TICKET DE COMPRA")
+    print("="*35)
+    print(f"Fecha: {fecha}")
+    print("-"*35)
+    print(f"{'Producto':<15}{'Cant':<6}{'Subtot($)':>10}")
+    print("-"*35)
+    for nombre, precio, cantidad, subtotal in productos:
+        print(f"{nombre:<15}{cantidad:<6}${subtotal:>8.2f}")
+    print("-"*35)
+    print(f"{'TOTAL COMPRA:':<20}${total:>10.2f}")
+    if descuento > 0:
+        print(f"{'Descuento:':<20}-${descuento:>9.2f}")
+    if recargo > 0:
+        print(f"{'Recargo:':<20}+${recargo:>9.2f}")
+    print("-"*35)
+    print(f"{'TOTAL A PAGAR:':<20}${total_final:>10.2f}")
+    print(f"{'Monto cliente:':<20}${monto_cliente:>10.2f}")
+    print(f"{'Vuelto:':<20}${vuelto:>10.2f}")
+    print("-"*35)
+    print(f"Método: {detalle_pago}")
+    print("¡Gracias por su compra!")
+    print("="*35)
+
+# Ejecutar
+generar_ticket()
