@@ -1,0 +1,121 @@
+def verificacion_usuario(usuario, usuarios):
+    """Verifica si el usuario existe en el diccionario."""
+    while usuario not in usuarios:
+        usuario = input("Usuario inválido, ingrese de nuevo: ")
+    print(usuario, "válido")
+    return usuario
+
+
+def verificacion_contraseña(usuario, contraseña, usuarios):
+    """Verifica que la contraseña coincida con el usuario."""
+    while usuarios[usuario]["contraseña"] != contraseña:
+        contraseña = input("Contraseña incorrecta, ingrese de nuevo: ")
+    print("Contraseña válida")
+
+
+def verificacion_ausencia(usuario, usuarios):
+    """Verifica que el usuario NO exista en el diccionario."""
+    while usuario in usuarios:
+        print(usuario, "ya existe.")
+        usuario = input("Ingrese un nombre de usuario nuevo: ")
+    print(usuario, "válido")
+    return usuario
+
+
+def generador_menu(opciones):
+    """Muestra el menú y devuelve las opciones válidas."""
+    print()
+    for i, opcion in enumerate(opciones, start=1):
+        print(f"{opcion} ({i})")
+    return [str(i) for i in range(1, len(opciones) + 1)]
+
+
+# ------------------- PROGRAMA PRINCIPAL -------------------
+
+usuarios = {
+    "tomas": {"contraseña": "42526090", "permiso": "usuario"},
+    "admin": {"contraseña": "123", "permiso": "admin"},
+    "juan": {"contraseña": "123", "permiso": "admin"}
+}
+
+finalizar = False
+
+while not finalizar:
+    print("---------- Bienvenido ----------")
+
+    usuario = input("Ingrese nombre de usuario: ")
+    usuario = verificacion_usuario(usuario, usuarios)
+
+    contraseña = input("Ingrese contraseña: ")
+    verificacion_contraseña(usuario, contraseña, usuarios)
+
+    usuario_activo = usuario
+    permiso_activo = usuarios[usuario]["permiso"]
+
+    cerrar_caja = False
+    while not cerrar_caja:
+        print("\n------------- Menú -------------")
+
+        opciones = [
+            "Cargar producto",
+            "Cerrar caja",
+            "Historial de ventas",
+            "Crear cuenta",
+            "Borrar cuenta",
+            "Salir del sistema"
+        ]
+        entradas_validas = generador_menu(opciones)
+
+        decision = input("Ingrese decisión: ")
+        while decision not in entradas_validas:
+            decision = input("Opción inválida. Ingrese de nuevo: ")
+
+        if decision == "1":  # Cargar producto
+            print("Función no implementada todavía.")
+
+        elif decision == "2":  # Cerrar caja
+            cerrar_caja = True
+
+        elif decision == "3":  # Historial de ventas
+            print("Función no implementada todavía.")
+
+        elif decision == "4":  # Crear cuenta
+            print("\n--------- Crear cuenta ---------")
+            if permiso_activo != "admin":
+                print("Acceso denegado. Solo los usuarios con permiso 'admin' pueden crear cuentas.")
+            else:
+                nuevo_usuario = input("Ingrese nuevo nombre de usuario: ")
+                nuevo_usuario = verificacion_ausencia(nuevo_usuario, usuarios)
+                nueva_contraseña = input("Ingrese contraseña: ")
+                permiso = input("Ingrese permiso (admin/usuario): ").lower()
+                if permiso not in ["admin", "usuario"]:
+                    permiso = "usuario"
+                usuarios[nuevo_usuario] = {
+                    "contraseña": nueva_contraseña,
+                    "permiso": permiso
+                }
+                print("Cuenta creada con éxito.")
+
+        elif decision == "5":  # Borrar cuenta
+            print("\n--------- Borrar cuenta ---------")
+            if permiso_activo != "admin":
+                print("Acceso denegado. Solo los usuarios con permiso 'admin' pueden borrar cuentas.")
+            else:
+                usuario_borrar = input("Ingrese nombre de usuario a borrar: ")
+                usuario_borrar = verificacion_usuario(usuario_borrar, usuarios)
+                
+                if usuario_borrar == usuario_activo:
+                    print("No puedes borrar el usuario con el que estás logueado.")
+                    continue
+
+                contraseña_borrar = input("Ingrese contraseña del usuario a borrar: ")
+                verificacion_contraseña(usuario_borrar, contraseña_borrar, usuarios)
+
+                usuarios.pop(usuario_borrar)
+                print("Cuenta borrada con éxito.")
+
+        elif decision == "6":  # Salir del sistema
+            cerrar_caja = True
+            finalizar = True
+            print("Cerrando sesión y saliendo del sistema...")
+
