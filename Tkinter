@@ -74,7 +74,7 @@ def abrir_stock(parent):
 
         ttk.Button(frm, text="Añadir", command=guardar).grid(row=3, column=0, columnspan=2, pady=10)
 
-        def buscar_producto(valor):
+    def buscar_producto(valor):
         """Busca un producto por código o nombre"""
         valor = str(valor).lower()
         for producto in stock:
