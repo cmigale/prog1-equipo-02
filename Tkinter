@@ -1,1 +1,55 @@
 
+# ---------------- MENÚ PRINCIPAL ----------------
+def abrir_menu(usuario, root):
+    permiso = usuarios[usuario]["permiso"]
+
+    menu = tk.Toplevel(root)
+    menu.title("Menú principal")
+    menu.geometry("500x550")
+    menu.configure(bg="white")
+    menu.resizable(False, False)
+
+    ttk.Label(menu, text="CodeBridge - Sistema de ventas", font=("Segoe UI", 20, "bold")).pack(pady=10)
+
+    # Logo
+    try:
+        logo = PhotoImage(file="logo.png")
+        tk.Label(menu, image=logo, bg="white").pack(pady=10)
+        menu.logo = logo
+    except:
+        tk.Label(menu, text="[Logo]", font=("Segoe UI", 14),
+                 bg="white").pack(pady=10)
+
+    # Botones principales
+    frm_botones = ttk.Frame(menu, padding=10)
+    frm_botones.pack(pady=15)
+
+    tk.Button(frm_botones, text="Nueva venta", width=25,
+              bg="#8EB2E9").grid(row=0, column=0, padx=10, pady=10)
+    tk.Button(frm_botones, text="Historial", width=25,
+              bg="#8EB2E9").grid(row=0, column=1, padx=10, pady=10)
+    tk.Button(frm_botones, text="Stock", width=25,
+              bg="#8EB2E9").grid(row=1, column=0, padx=10, pady=10)
+
+    tk.Button(frm_botones, text="Cerrar sesión", width=25, 
+              bg="#FC7F7F",
+               command=lambda: cerrar_sesion(menu, root, entry_usuario, entry_contraseña)
+               ).grid(row=1, column=1, padx=10, pady=10)
+
+    # Opciones de administrador
+    if permiso == "admin":
+        ttk.Separator(menu, orient="horizontal").pack(fill="x", pady=10)
+        ttk.Label(menu, text="Opciones de administrador", font=("Segoe UI", 10, "bold")).pack(pady=5)
+        frm_admin = ttk.Frame(menu, padding=10)
+        frm_admin.pack()
+
+        tk.Button(frm_admin, text="👤 Crear cuenta", bg="#B0E29B", width=25, command=abrir_crear_cuenta).grid(row=0, column=0, padx=10, pady=5)
+        tk.Button(frm_admin, text="❌ Borrar cuenta", bg="#E97070", width=25, command=abrir_borrar_cuenta).grid(row=1, column=0, padx=10, pady=5)
+
+    # Al cerrar la ventana
+    def volver_login():
+        menu.destroy()
+        root.deiconify()
+
+    menu.protocol("WM_DELETE_WINDOW", volver_login)
+
