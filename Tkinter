@@ -1,6 +1,5 @@
 import tkinter as tk
 from tkinter import ttk, messagebox, PhotoImage
-
 # ---------------- DATOS ----------------
 usuarios = {
     "admin": {"contraseña": "123", "permiso": "admin"},
