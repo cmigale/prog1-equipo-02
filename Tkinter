@@ -143,11 +143,14 @@ def abrir_stock(parent):
             if vprecio.get():
                 try:
                     prod["precio"] = float(vprecio.get())
+                    
                 except ValueError:
                     messagebox.showerror("Error", "Precio inválido.")
+                    
                     return
 
             actualizar_tabla()
+            guardar_datos("stock.json", stock)
             messagebox.showinfo("Éxito", "Producto actualizado.")
             dlg.destroy()
 
