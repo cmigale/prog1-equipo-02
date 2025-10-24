@@ -1,56 +1,149 @@
 import tkinter as tk
 from tkinter import ttk, messagebox, PhotoImage
+# ---------------- DATOS ----------------
+usuarios = {
+    "admin": {"contraseña": "123", "permiso": "admin"},
+    "juan": {"contraseña": "123", "permiso": "usuario"}
+}
 
-# ---------------- MENÚ PRINCIPAL ----------------
-def abrir_menu(usuario, root):
-    permiso = usuarios[usuario]["permiso"]
 
-    menu = tk.Toplevel(root)
-    menu.title("Menú principal")
-    menu.geometry("500x550")
-    menu.configure(bg="white")
-    menu.resizable(False, False)
+# ---------------- FUNCIONES DE VERIFICACIÓN ----------------
+def verificar_usuario(usuario):
+    return usuario in usuarios
 
-    ttk.Label(menu, text="CodeBridge - Sistema de ventas", font=("Segoe UI", 20, "bold")).pack(pady=10)
 
-    # Logo
-    try:
-        logo = PhotoImage(file="logo.png")
-        tk.Label(menu, image=logo, bg="white").pack(pady=10)
-        menu.logo = logo
-    except:
-        tk.Label(menu, text="[Logo]", font=("Segoe UI", 14),
-                 bg="white").pack(pady=10)
+def verificar_contraseña(usuario, contraseña):
+    return usuarios[usuario]["contraseña"] == contraseña
 
-    # Botones principales
-    frm_botones = ttk.Frame(menu, padding=10)
-    frm_botones.pack(pady=15)
 
-    tk.Button(frm_botones, text="Nueva venta", width=25,
-              bg="#8EB2E9").grid(row=0, column=0, padx=10, pady=10)
-    tk.Button(frm_botones, text="Historial", width=25,
-              bg="#8EB2E9").grid(row=0, column=1, padx=10, pady=10)
-    tk.Button(frm_botones, text="Stock", width=25,
-              bg="#8EB2E9").grid(row=1, column=0, padx=10, pady=10)
+# ---------------- SESIÓN ----------------
+def cerrar_sesion(menu, root, entry_usuario, entry_contraseña):
+    menu.destroy()
+    entry_usuario.delete(0, tk.END)
+    entry_contraseña.delete(0, tk.END)
+    root.deiconify()
 
-    tk.Button(frm_botones, text="Cerrar sesión", width=25, 
-              bg="#FC7F7F",
-               command=lambda: cerrar_sesion(menu, root, entry_usuario, entry_contraseña)
-               ).grid(row=1, column=1, padx=10, pady=10)
 
-    # Opciones de administrador
-    if permiso == "admin":
-        ttk.Separator(menu, orient="horizontal").pack(fill="x", pady=10)
-        ttk.Label(menu, text="Opciones de administrador", font=("Segoe UI", 10, "bold")).pack(pady=5)
-        frm_admin = ttk.Frame(menu, padding=10)
-        frm_admin.pack()
+# ---------------- ADMIN: CREAR CUENTA ----------------
+def abrir_crear_cuenta():
+    ventana = tk.Toplevel()
+    ventana.title("Crear cuenta")
+    ventana.geometry("320x220")
+    ventana.configure(bg="white")
+    ventana.resizable(False, False)
 
-        tk.Button(frm_admin, text="👤 Crear cuenta", bg="#B0E29B", width=25, command=abrir_crear_cuenta).grid(row=0, column=0, padx=10, pady=5)
-        tk.Button(frm_admin, text="❌ Borrar cuenta", bg="#E97070", width=25, command=abrir_borrar_cuenta).grid(row=1, column=0, padx=10, pady=5)
+    frm = ttk.Frame(ventana, padding=12)
+    frm.pack(fill="both", expand=True)
 
-    # Al cerrar la ventana
-    def volver_login():
-        menu.destroy()
-        root.deiconify()
+    ttk.Label(frm, text="Usuario nuevo:").grid(row=0, column=0, padx=6, pady=6, sticky="e")
+    ttk.Label(frm, text="Contraseña:").grid(row=1, column=0, padx=6, pady=6, sticky="e")
 
-    menu.protocol("WM_DELETE_WINDOW", volver_login)
+    entry_usuario = ttk.Entry(frm, width=25)
+    entry_contraseña = ttk.Entry(frm, show="*", width=25)
+    entry_usuario.grid(row=0, column=1, pady=4)
+    entry_contraseña.grid(row=1, column=1, pady=4)
+
+    def crear():
+        usuario = entry_usuario.get().strip() # saca lo que se haya escrito en el campo de usuario
+        contraseña = entry_contraseña.get().strip() # saca lo que se haya escrito en el campo de contraseña
+
+        if not usuario or not contraseña:
+            messagebox.showerror("Error", "Complete todos los campos.")
+            return
+
+        if usuario in usuarios:
+            messagebox.showerror("Error", "El usuario ya existe.")
+            return
+
+        usuarios[usuario] = {"contraseña": contraseña, "permiso": "usuario"}
+        messagebox.showinfo("Éxito", f"Cuenta '{usuario}' creada.")
+        ventana.destroy()
+
+    tk.Button(frm, text="Crear cuenta", command=crear,
+               bg="#8EB2E9", fg="white").grid(row=2, column=0, columnspan=2, pady=10)
+
+
+# ---------------- ADMIN: BORRAR CUENTA ----------------
+def abrir_borrar_cuenta():
+    ventana = tk.Toplevel()
+    ventana.title("Borrar cuenta")
+    ventana.geometry("300x150")
+    ventana.configure(bg="white")
+    ventana.resizable(False, False)
+
+    frm = ttk.Frame(ventana, padding=12)
+    frm.pack(fill="both", expand=True)
+
+    ttk.Label(frm, text="Usuario a borrar:").pack(pady=5)
+    entry_usuario = ttk.Entry(frm, width=25)
+    entry_usuario.pack()
+
+    def borrar():
+        usuario = entry_usuario.get().strip()
+
+        if usuario not in usuarios:
+            messagebox.showerror("Error", "Usuario no encontrado.")
+            return
+
+        if usuario == "admin":
+            messagebox.showerror("Error", "No se puede borrar al admin.")
+            return
+
+        usuarios.pop(usuario)
+        messagebox.showinfo("Éxito", f"Usuario '{usuario}' borrado.")
+        ventana.destroy()
+
+    ttk.Button(frm, text="Borrar", command=borrar).pack(pady=10)
+# ---------------- LOGIN ----------------
+def iniciar_sesion(root, entry_usuario, entry_contraseña):
+    usuario = entry_usuario.get().strip()
+    contraseña = entry_contraseña.get().strip()
+
+    if not verificar_usuario(usuario):
+        messagebox.showerror("Error", "Usuario no encontrado.")
+        return
+
+    if not verificar_contraseña(usuario, contraseña):
+        messagebox.showerror("Error", "Contraseña incorrecta.")
+        return
+
+    messagebox.showinfo("Bienvenido", f"Sesión iniciada como {usuario}.")
+    root.withdraw()
+    abrir_menu(usuario, root)
+
+
+# ---------------- VENTANA PRINCIPAL ----------------
+root = tk.Tk()
+root.title("CodeBridge - Inicio de sesión")
+root.geometry("400x400")
+root.configure(bg="white")
+root.resizable(False, False)
+
+# Logo
+try:
+    logo = PhotoImage(file="logo.png")
+    tk.Label(root, image=logo, bg="white").pack(pady=10)
+    root.logo = logo
+except:
+    ttk.Label(root, text="[Logo]", font=("Segoe UI", 14)).pack(pady=10)
+
+ttk.Label(root, text="Inicio de sesión", font=("Segoe UI", 14, "bold")).pack(pady=5)
+
+# Campos de entrada
+frm_login = ttk.Frame(root, padding=12)
+frm_login.pack(pady=10)
+
+ttk.Label(frm_login, text="Usuario:").grid(row=0, column=0, sticky="e", padx=6, pady=4)
+entry_usuario = ttk.Entry(frm_login, width=25)
+entry_usuario.grid(row=0, column=1, pady=4)
+
+ttk.Label(frm_login, text="Contraseña:").grid(row=1, column=0, sticky="e", padx=6, pady=4)
+entry_contraseña = ttk.Entry(frm_login, show="*", width=25)
+entry_contraseña.grid(row=1, column=1, pady=4)
+
+# Botón de inicio
+tk.Button(root, text="Iniciar sesión",
+          command=lambda: iniciar_sesion(root, entry_usuario, entry_contraseña),
+          bg="#6498E7", fg="white", width=20).pack(pady=15)
+
+root.mainloop()
