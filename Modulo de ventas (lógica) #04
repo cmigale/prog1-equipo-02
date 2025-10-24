@@ -1,0 +1,65 @@
+#Ejemplo para poder calcular
+subtotalCarrito=1000  #total de productos
+print("Subtotal de la compra: $", subtotalCarrito)
+
+#---------FIN DE EJEMPLO, BORRAR CUANDO SE FUSIONE------------------------------------------
+
+print("\Metodos de pago:")
+print("1. Efectivo")                   
+print("2. Billetera virtual ")
+print("3. Tarjeta de credito ")
+print("4. Debito")
+
+opcion=input("Seleccione metodo (1-4): ")
+
+totalFinal=subtotalCarrito  #valor base
+
+if opcion=="1":  #efectivo
+    descuento=subtotalCarrito*0.10
+    totalFinal=subtotalCarrito-descuento
+    print("Descuento aplicado por efectivo (10%): -$", descuento)
+
+elif opcion=="2":  #billetera virtual
+    descuento=subtotalCarrito * 0.10
+    totalFinal=subtotalCarrito-descuento
+    print("Descuento aplicado por billetera virtual (10%): -$", descuento)
+
+elif opcion=="3":  #tarjeta de credito
+    cuotasTipos=input("¿En cuantas cuotas? (3, 6 o 12): ")
+    if cuotasTipos.isdigit():
+        cuotas=int(cuotasTipos)
+        if cuotas==3:
+            interes=0.03
+        elif cuotas==6:
+            interes=0.05
+        elif cuotas==12:
+            interes=0.08
+        
+        recargo=subtotalCarrito*interes
+        totalFinal=subtotalCarrito+recargo
+        if interes>0:
+            print(f"Recargo aplicado por credito en {cuotas} cuotas ({int(interes*100)}%): +${recargo:.2f}")
+            print("Pago en", cuotas, "cuotas de $", round(totalFinal/cuotas, 2))
+
+elif opcion=="4":  #debito
+    print("Pago con debito")
+
+else:
+    print("Opcion invalida")
+
+print("Total a pagar: $", round(totalFinal, 2))
+
+#----------------ingreso de monto y vuelto------------------------------------------------------------------
+
+montoIngresado=input("Monto entregado por el cliente: $")
+if montoIngresado.isdigit():
+    monto=int(montoIngresado)
+    if monto<totalFinal:
+        print("Monto insuficiente. Faltan: $", round(totalFinal - monto, 2))    
+        vuelto=0
+    else:
+        vuelto=monto-totalFinal
+        print("Vuelto: $", round(vuelto, 2))
+else:
+    print("Error: monto no valido")
+    vuelto=0
