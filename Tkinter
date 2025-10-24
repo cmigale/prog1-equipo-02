@@ -1,6 +1,5 @@
 import tkinter as tk
 from tkinter import ttk, messagebox, PhotoImage
-
 # ---------------- DATOS ----------------
 usuarios = {
     "admin": {"contraseña": "123", "permiso": "admin"},
@@ -23,6 +22,78 @@ def cerrar_sesion(menu, root, entry_usuario, entry_contraseña):
     entry_usuario.delete(0, tk.END)
     entry_contraseña.delete(0, tk.END)
     root.deiconify()
+
+
+# ---------------- ADMIN: CREAR CUENTA ----------------
+def abrir_crear_cuenta():
+    ventana = tk.Toplevel()
+    ventana.title("Crear cuenta")
+    ventana.geometry("320x220")
+    ventana.configure(bg="white")
+    ventana.resizable(False, False)
+
+    frm = ttk.Frame(ventana, padding=12)
+    frm.pack(fill="both", expand=True)
+
+    ttk.Label(frm, text="Usuario nuevo:").grid(row=0, column=0, padx=6, pady=6, sticky="e")
+    ttk.Label(frm, text="Contraseña:").grid(row=1, column=0, padx=6, pady=6, sticky="e")
+
+    entry_usuario = ttk.Entry(frm, width=25)
+    entry_contraseña = ttk.Entry(frm, show="*", width=25)
+    entry_usuario.grid(row=0, column=1, pady=4)
+    entry_contraseña.grid(row=1, column=1, pady=4)
+
+    def crear():
+        usuario = entry_usuario.get().strip() # saca lo que se haya escrito en el campo de usuario
+        contraseña = entry_contraseña.get().strip() # saca lo que se haya escrito en el campo de contraseña
+
+        if not usuario or not contraseña:
+            messagebox.showerror("Error", "Complete todos los campos.")
+            return
+
+        if usuario in usuarios:
+            messagebox.showerror("Error", "El usuario ya existe.")
+            return
+
+        usuarios[usuario] = {"contraseña": contraseña, "permiso": "usuario"}
+        messagebox.showinfo("Éxito", f"Cuenta '{usuario}' creada.")
+        ventana.destroy()
+
+    tk.Button(frm, text="Crear cuenta", command=crear,
+               bg="#8EB2E9", fg="white").grid(row=2, column=0, columnspan=2, pady=10)
+
+
+# ---------------- ADMIN: BORRAR CUENTA ----------------
+def abrir_borrar_cuenta():
+    ventana = tk.Toplevel()
+    ventana.title("Borrar cuenta")
+    ventana.geometry("300x150")
+    ventana.configure(bg="white")
+    ventana.resizable(False, False)
+
+    frm = ttk.Frame(ventana, padding=12)
+    frm.pack(fill="both", expand=True)
+
+    ttk.Label(frm, text="Usuario a borrar:").pack(pady=5)
+    entry_usuario = ttk.Entry(frm, width=25)
+    entry_usuario.pack()
+
+    def borrar():
+        usuario = entry_usuario.get().strip()
+
+        if usuario not in usuarios:
+            messagebox.showerror("Error", "Usuario no encontrado.")
+            return
+
+        if usuario == "admin":
+            messagebox.showerror("Error", "No se puede borrar al admin.")
+            return
+
+        usuarios.pop(usuario)
+        messagebox.showinfo("Éxito", f"Usuario '{usuario}' borrado.")
+        ventana.destroy()
+
+    ttk.Button(frm, text="Borrar", command=borrar).pack(pady=10)
 # ---------------- LOGIN ----------------
 def iniciar_sesion(root, entry_usuario, entry_contraseña):
     usuario = entry_usuario.get().strip()
@@ -76,4 +147,3 @@ tk.Button(root, text="Iniciar sesión",
           bg="#6498E7", fg="white", width=20).pack(pady=15)
 
 root.mainloop()
-
