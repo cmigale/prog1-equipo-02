@@ -1,10 +1,117 @@
 import tkinter as tk
 from tkinter import ttk, messagebox, PhotoImage
+import random
 # ---------------- DATOS ----------------
 usuarios = {
     "admin": {"contraseña": "123", "permiso": "admin"},
     "juan": {"contraseña": "123", "permiso": "usuario"}
 }
+
+#STOCK
+def abrir_stock(parent):
+    global stock
+    ventana = tk.Toplevel(parent)
+    ventana.title("CodeBridge - Productos")
+    ventana.geometry("950x500")
+
+    def actualizar_tabla():
+        """Refresca la tabla de productos"""
+        tree.delete(*tree.get_children())
+        for producto in stock:
+            tree.insert(
+                "", "end",
+                values=(
+                    producto["codigo"],
+                    producto["producto"],
+                    producto["cantidad"],
+                    f"${producto['precio']:.2f}"
+                )
+            )
+
+    def agregar_producto():
+        """Abre una ventana para añadir un nuevo producto"""
+        dlg = tk.Toplevel(ventana)
+        dlg.title("Añadir producto")
+        dlg.resizable(False, False)
+        dlg.geometry("320x220")
+        dlg.transient(ventana)
+        dlg.grab_set()
+
+        frm = ttk.Frame(dlg, padding=12)
+        frm.pack(fill="both", expand=True)
+
+        ttk.Label(frm, text="Producto:").grid(row=0, column=0, sticky="e", padx=6, pady=6)
+        ttk.Label(frm, text="Cantidad:").grid(row=1, column=0, sticky="e", padx=6, pady=6)
+        ttk.Label(frm, text="Precio:").grid(row=2, column=0, sticky="e", padx=6, pady=6)
+
+        vnombre = ttk.Entry(frm, width=25)
+        vcant = ttk.Entry(frm, width=25)
+        vprecio = ttk.Entry(frm, width=25)
+        vnombre.grid(row=0, column=1, pady=4)
+        vcant.grid(row=1, column=1, pady=4)
+        vprecio.grid(row=2, column=1, pady=4)
+
+        def guardar():
+            nombre = vnombre.get().strip()
+            try:
+                cantidad = int(vcant.get())
+                precio = float(vprecio.get())
+            except ValueError:
+                messagebox.showerror("Error", "Cantidad y precio deben ser numéricos.")
+                return
+            if not nombre:
+                messagebox.showerror("Error", "El nombre no puede estar vacío.")
+                return
+
+            codigo = random.randint(100000, 999999)
+            while any(p["codigo"] == codigo for p in stock):
+                codigo = random.randint(100000, 999999)
+
+            stock.append({"codigo": codigo, "producto": nombre, "cantidad": cantidad, "precio": precio})
+            actualizar_tabla()
+            messagebox.showinfo("Éxito", f"'{nombre}' agregado correctamente.")
+            dlg.destroy()
+
+        ttk.Button(frm, text="Añadir", command=guardar).grid(row=3, column=0, columnspan=2, pady=10)
+
+
+    ttk.Label(ventana, text="📦Stock", font=("Segoe UI", 16, "bold")).pack(pady=10)
+
+    stock_frame = ttk.Frame(ventana)
+    stock_frame.pack(fill="both", expand=True, padx=20, pady=10)
+
+    scroll_y = ttk.Scrollbar(stock_frame, orient="vertical")
+    tree = ttk.Treeview(
+        stock_frame,
+        columns=("Código", "Producto", "Cantidad", "Precio"),
+        show="headings",
+        height=15,
+        yscrollcommand=scroll_y.set
+    )
+    scroll_y.config(command=tree.yview)
+    scroll_y.pack(side="right", fill="y")
+    tree.pack(fill="both", expand=True)
+
+    # Encabezados y columnas
+    tree.heading("Código", text="Código")
+    tree.heading("Producto", text="Producto")
+    tree.heading("Cantidad", text="Cantidad")
+    tree.heading("Precio", text="Precio Unitario")
+
+    tree.column("Código", width=150, anchor="center")
+    tree.column("Producto", width=300, anchor="center")
+    tree.column("Cantidad", width=150, anchor="center")
+    tree.column("Precio", width=150, anchor="center")
+
+    # Botones
+    botones = ttk.Frame(ventana)
+    botones.pack(pady=10)
+
+    tk.Button(botones, text="➕ Añadir producto", bg="#8EB2E9", command=agregar_producto).grid(row=0, column=0, padx=10)
+    tk.Button(botones, text="✏️ Editar producto", bg="#8EB2E9").grid(row=0, column=1, padx=10)
+    tk.Button(botones, text="❌ Eliminar producto", bg="#FC7F7F").grid(row=0, column=2, padx=10)
+
+    actualizar_tabla()
 
 
 # ---------------- FUNCIONES DE VERIFICACIÓN ----------------
