@@ -74,6 +74,86 @@ def abrir_stock(parent):
 
         ttk.Button(frm, text="Añadir", command=guardar).grid(row=3, column=0, columnspan=2, pady=10)
 
+        def buscar_producto(valor):
+        """Busca un producto por código o nombre"""
+        valor = str(valor).lower()
+        for producto in stock:
+            if str(producto["codigo"]) == valor or producto["producto"].lower() == valor:
+                return producto
+        return None
+
+    def editar_producto():
+        """Abre diálogo para buscar y editar producto"""
+        dlg = tk.Toplevel(ventana)
+        dlg.title("Editar producto")
+        dlg.geometry("350x250")
+        dlg.resizable(False, False)
+        dlg.transient(ventana)
+        dlg.grab_set()
+
+        frm = ttk.Frame(dlg, padding=12)
+        frm.pack(fill="both", expand=True)
+
+        ttk.Label(frm, text="Producto a modificar:").grid(row=0, column=0, padx=6, pady=6)
+        v_busca = ttk.Entry(frm, width=25)
+        v_busca.grid(row=0, column=1, pady=6)
+
+        ttk.Label(frm, text="Nuevo nombre:").grid(row=1, column=0, padx=6, pady=6)
+        ttk.Label(frm, text="Nueva cantidad:").grid(row=2, column=0, padx=6, pady=6)
+        ttk.Label(frm, text="Nuevo precio:").grid(row=3, column=0, padx=6, pady=6)
+
+        vnombre = ttk.Entry(frm, width=25)
+        vcant = ttk.Entry(frm, width=25)
+        vprecio = ttk.Entry(frm, width=25)
+        vnombre.grid(row=1, column=1, pady=4)
+        vcant.grid(row=2, column=1, pady=4)
+        vprecio.grid(row=3, column=1, pady=4)
+
+        def aplicar():
+            prod = buscar_producto(v_busca.get())
+            if not prod:
+                messagebox.showerror("Error", "Producto no encontrado.")
+                return
+
+            if vnombre.get():
+                prod["producto"] = vnombre.get()
+            if vcant.get():
+                try:
+                    prod["cantidad"] = int(vcant.get())
+                except ValueError:
+                    messagebox.showerror("Error", "Cantidad inválida.")
+                    return
+            if vprecio.get():
+                try:
+                    prod["precio"] = float(vprecio.get())
+                except ValueError:
+                    messagebox.showerror("Error", "Precio inválido.")
+                    return
+
+            actualizar_tabla()
+            messagebox.showinfo("Éxito", "Producto actualizado.")
+            dlg.destroy()
+
+        ttk.Button(frm, text="Guardar cambios", command=aplicar).grid(row=4, column=0, columnspan=2, pady=10)
+
+    def eliminar_producto():
+        """Elimina un producto seleccionado"""
+        item = tree.selection()
+        if not item:
+            messagebox.showwarning("Aviso", "Seleccioná un producto para eliminar.")
+            return
+
+        valores = tree.item(item, "values")
+        codigo = int(valores[0])
+
+        confirmar = messagebox.askyesno("Confirmar", f"¿Seguro que querés eliminar '{valores[1]}'?")
+        if confirmar:
+            global stock  
+            stockfiltrado = [p for p in stock if p["codigo"] != codigo] #actualizo el stock
+            stock[:] = stockfiltrado
+            actualizar_tabla()
+            messagebox.showinfo("Éxito", "Producto eliminado correctamente.")
+
 
     ttk.Label(ventana, text="📦Stock", font=("Segoe UI", 16, "bold")).pack(pady=10)
 
@@ -108,8 +188,8 @@ def abrir_stock(parent):
     botones.pack(pady=10)
 
     tk.Button(botones, text="➕ Añadir producto", bg="#8EB2E9", command=agregar_producto).grid(row=0, column=0, padx=10)
-    tk.Button(botones, text="✏️ Editar producto", bg="#8EB2E9").grid(row=0, column=1, padx=10)
-    tk.Button(botones, text="❌ Eliminar producto", bg="#FC7F7F").grid(row=0, column=2, padx=10)
+    tk.Button(botones, text="✏️ Editar producto", bg="#8EB2E9", command=editar_producto).grid(row=0, column=1, padx=10)
+    tk.Button(botones, text="❌ Eliminar producto", bg="#FC7F7F", command=eliminar_producto).grid(row=0, column=2, padx=10)
 
     actualizar_tabla()
 
