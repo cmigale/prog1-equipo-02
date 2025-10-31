@@ -1,0 +1,66 @@
+clientes = {}
+
+def registrar_cliente(nombre):
+    confirmar = "n"
+    while confirmar != "s":
+        dni = input("Ingrese el DNI: ").lower()
+        telefono = input("Ingrese el número de teléfono: ").lower()
+        mail = input("Ingrese el mail: ").lower()
+
+        print("\nVerifique los datos del cliente:")
+        print(f"Nombre y Apellido: {nombre}")
+        print(f"DNI: {dni}")
+        print(f"Teléfono: {telefono}")
+        print(f"Mail: {mail}")
+
+        confirmar = input("¿Son correctos los datos? (s/n): ").lower()
+
+    clave = f"{nombre}"
+    clientes[clave] = {
+        "DNI": dni,
+        "Teléfono": telefono,
+        "Mail": mail
+    }
+    print("\nCliente registrado correctamente.")
+
+def buscar_o_crear():
+    nombre = input("Ingrese el nombre y apellido: ").strip().lower()
+    clave = f"{nombre}"
+
+    if clave in clientes:
+        print("\nCliente encontrado:")
+        print(nombre)
+        print(clientes[clave])
+    else:
+        print("\nEl cliente no existe.")
+        opcion = input("¿Desea crear un nuevo perfil? (s/n): ").strip().lower()
+        if opcion == "s":
+            registrar_cliente(nombre)
+        else:
+            print("Operación cancelada.")
+
+
+def menu():
+    opcion = ""
+    while opcion != "3":
+        print("\n--- Sistema de Clientes ---")
+        print("1. Buscar cliente / Crear si no existe")
+        print("2. Mostrar todos los clientes")
+        print("3. Salir")
+        opcion = input("Elija una opción: ")
+
+        if opcion == "1":
+            buscar_o_crear()
+        elif opcion == "2":
+            if not clientes:
+                print("\nNo hay clientes registrados.")
+            else:
+                print("\nLista de clientes:")
+                for nombre, datos in clientes.items():
+                    print(f"{nombre}: {datos}")
+        elif opcion == "3":
+            print("Saliendo del sistema...")
+        else:
+            print("Opción inválida")
+
+menu()
