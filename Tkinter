@@ -24,6 +24,44 @@ usuarios = cargar_datos("usuarios.json", {
 })
 stock = cargar_datos("stock.json", [])
 #STOCK
+
+def visualizarinfo(valor,dlg,stock):
+    prod = buscar_producto(valor) 
+    if prod is None:
+        messagebox.showwarning("Buscar", "Producto no encontrado.")
+        return
+    messagebox.showinfo(
+        "Producto encontrado",
+        f"Código: {prod['codigo']}\n"
+        f"Nombre: {prod['producto']}\n"
+        f"Cantidad: {prod['cantidad']}\n"
+        f"Precio: ${prod['precio']:.2f}"
+    )
+    dlg.destroy()
+
+
+def ventanabusqueda(parent,stock):
+    ANCHO, ALTO = 340, 140
+    dlg = tk.Toplevel(parent)
+    dlg.title("Buscar producto")
+    dlg.resizable(False, False)
+    centrar_ventana(dlg, ANCHO, ALTO)
+    dlg.transient(parent)
+    dlg.grab_set()
+
+    frm = ttk.Frame(dlg, padding=12)
+    frm.pack(fill="both", expand=True)
+    ttk.Label(frm, text="Código o nombre:").grid(row=0, column=0, padx=6, pady=6, sticky="e")
+    ent = ttk.Entry(frm, width=28)
+    ent.grid(row=0, column=1, padx=6, pady=6)
+    ent.focus()
+
+    ttk.Button(frm, text="Buscar",
+               command=lambda: visualizarinfo(ent.get(), dlg, stock)
+    ).grid(row=1, column=1, padx=6, pady=8, sticky="e")
+
+
+
 def abrir_stock(parent):
     global stock
     ventana = tk.Toplevel(parent)
@@ -210,6 +248,7 @@ def abrir_stock(parent):
 
     tk.Button(botones, text="➕ Añadir producto", bg="#8EB2E9", command=agregar_producto).grid(row=0, column=0, padx=10)
     tk.Button(botones, text="✏️ Editar producto", bg="#8EB2E9", command=editar_producto).grid(row=0, column=1, padx=10)
+    tk.Button(botones, text="🔎 Buscar producto", bg="#8EB2E9", command=lambda: ventanabusqueda(ventana, stock)).grid(row=0, column=2, padx=10)
     tk.Button(botones, text="❌ Eliminar producto", bg="#FC7F7F", command=eliminar_producto).grid(row=0, column=2, padx=10)
 
     actualizar_tabla()
