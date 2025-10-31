@@ -373,10 +373,14 @@ def abrir_menu(usuario, root):
               bg="#8EB2E9").grid(row=0, column=0, padx=10, pady=10)
     tk.Button(frm_botones, text="Historial", width=25,
               bg="#8EB2E9").grid(row=0, column=1, padx=10, pady=10)
-    tk.Button(frm_botones, text="Stock", width=25,
-              bg="#8EB2E9",
-              command=lambda: abrir_stock(menu)).grid(row=1, column=0, padx=10, pady=10)
-            
+    tk.Button(
+        frm_botones,
+        text="Stock",
+        width=25,
+        bg="#8EB2E9",
+        command=lambda: abrir_stock(menu)
+    ).grid(row=1, column=0, padx=10, pady=10)
+
     tk.Button(frm_botones, text="Cerrar sesión", width=25, 
               bg="#FC7F7F",
                command=lambda: cerrar_sesion(menu, root, entry_usuario, entry_contraseña)
