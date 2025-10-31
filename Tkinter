@@ -23,6 +23,12 @@ usuarios = cargar_datos("usuarios.json", {
     "juan": {"contraseña": "123", "permiso": "usuario"}
 })
 stock = cargar_datos("stock.json", [])
+def centrar_ventana(ventana, ancho, alto):
+    """Calcula la posición para centrar una ventana en la pantalla."""
+    x = (ventana.winfo_screenwidth() // 2) - (ancho // 2)
+    y = (ventana.winfo_screenheight() // 2) - (alto // 2)
+    ventana.geometry(f'{ancho}x{alto}+{x}+{y}')
+
 #STOCK
 
 def visualizarinfo(valor,dlg,stock):
@@ -61,158 +67,144 @@ def ventanabusqueda(parent,stock):
     ).grid(row=1, column=1, padx=6, pady=8, sticky="e")
 
 
+def guardar(name, quant, price, tree, stock, dlg):
+    """Guarda el producto del diálogo de alta """
+    nombre = name
+    try:
+        cantidad = int(quant)
+        precio = float(price)
+    except ValueError:
+        messagebox.showerror("Error", "Cantidad y precio deben ser numéricos.")
+        return
+    if not nombre:
+        messagebox.showerror("Error", "El nombre no puede estar vacío.")
+        return
 
-def abrir_stock(parent):
-    global stock
-    ventana = tk.Toplevel(parent)
-    ventana.title("CodeBridge - Productos")
-    ventana.geometry("950x500")
+    codigo = random.randint(100000, 999999)
+    while any(p["codigo"] == codigo for p in stock):
+        codigo = random.randint(100000, 999999)
 
-    def actualizar_tabla():
-        """Refresca la tabla de productos"""
-        tree.delete(*tree.get_children())
-        for producto in stock:
-            tree.insert(
-                "", "end",
-                values=(
-                    producto["codigo"],
-                    producto["producto"],
-                    producto["cantidad"],
-                    f"${producto['precio']:.2f}"
-                )
-            )
+    stock.append({"codigo": codigo, "producto": nombre, "cantidad": cantidad, "precio": precio})
+    actualizar_tabla(tree)
+    messagebox.showinfo("Éxito", f"'{nombre}' agregado correctamente.")
+    dlg.destroy()
 
-    def agregar_producto():
-        """Abre una ventana para añadir un nuevo producto"""
-        dlg = tk.Toplevel(ventana)
-        dlg.title("Añadir producto")
-        dlg.resizable(False, False)
-        dlg.geometry("320x220")
-        dlg.transient(ventana)
-        dlg.grab_set()
+def agregar_producto(parent, tree, stock):
+    """Abre una ventana para añadir un nuevo producto"""
+    ANCHO, ALTO = 320, 240
+    dlg = tk.Toplevel(parent)      
+    dlg.title("Añadir producto")
+    dlg.resizable(False, False)
+    dlg.transient(parent)
+    dlg.grab_set()
+    centrar_ventana(dlg, ANCHO, ALTO)
 
-        frm = ttk.Frame(dlg, padding=12)
-        frm.pack(fill="both", expand=True)
+    frm = ttk.Frame(dlg, padding=12)
+    frm.pack(fill="both", expand=True)
 
-        ttk.Label(frm, text="Producto:").grid(row=0, column=0, sticky="e", padx=6, pady=6)
-        ttk.Label(frm, text="Cantidad:").grid(row=1, column=0, sticky="e", padx=6, pady=6)
-        ttk.Label(frm, text="Precio:").grid(row=2, column=0, sticky="e", padx=6, pady=6)
+    ttk.Label(frm, text="Producto:").grid(row=0, column=0, sticky="e", padx=6, pady=6)
+    ttk.Label(frm, text="Cantidad:").grid(row=1, column=0, sticky="e", padx=6, pady=6)
+    ttk.Label(frm, text="Precio:").grid(row=2, column=0, sticky="e", padx=6, pady=6)
 
-        vnombre = ttk.Entry(frm, width=25)
-        vcant = ttk.Entry(frm, width=25)
-        vprecio = ttk.Entry(frm, width=25)
-        vnombre.grid(row=0, column=1, pady=4)
-        vcant.grid(row=1, column=1, pady=4)
-        vprecio.grid(row=2, column=1, pady=4)
+    vnombre = ttk.Entry(frm, width=25)
+    vcant   = ttk.Entry(frm, width=25)
+    vprecio = ttk.Entry(frm, width=25)
+    vnombre.grid(row=0, column=1, pady=4)
+    vcant.grid(row=1, column=1, pady=4)
+    vprecio.grid(row=2, column=1, pady=4)
 
-        def guardar():
-            nombre = vnombre.get().strip()
-            try:
-                cantidad = int(vcant.get())
-                precio = float(vprecio.get())
-            except ValueError:
-                messagebox.showerror("Error", "Cantidad y precio deben ser numéricos.")
-                return
-            if not nombre:
-                messagebox.showerror("Error", "El nombre no puede estar vacío.")
-                return
+    ttk.Button(frm, text="Añadir", command=lambda: guardar(vnombre.get(), vcant.get(), vprecio.get(),
+            tree, stock, dlg)).grid(row=3, column=0, columnspan=2, pady=10)
 
-            codigo = random.randint(100000, 999999)
-            while any(p["codigo"] == codigo for p in stock):
-                codigo = random.randint(100000, 999999)
+def buscar_producto(valor):
+    """Busca un producto por código o nombre"""
+    valor = str(valor).lower()
+    for producto in stock:
+        if str(producto["codigo"]) == valor or producto["producto"].lower() == valor:
+            return producto
+    return None
 
-            stock.append({"codigo": codigo, "producto": nombre, "cantidad": cantidad, "precio": precio})
-            guardar_datos("stock.json", stock)
-            actualizar_tabla()
-            messagebox.showinfo("Éxito", f"'{nombre}' agregado correctamente.")
-            dlg.destroy()
 
-        ttk.Button(frm, text="Añadir", command=guardar).grid(row=3, column=0, columnspan=2, pady=10)
+def aplicar(v_busca , nuevo_nombre , nuevo_cant , nuevo_precio, tree, stock , dlg):
+    """Aplica cambios de edición al producto encontrado"""
+    prod = buscar_producto(v_busca)
+    if not prod:
+        messagebox.showerror("Error", "Producto no encontrado.")
+        return
 
-    def buscar_producto(valor):
-        """Busca un producto por código o nombre"""
-        valor = str(valor).lower()
-        for producto in stock:
-            if str(producto["codigo"]) == valor or producto["producto"].lower() == valor:
-                return producto
-        return None
-
-    def editar_producto():
-        """Abre diálogo para buscar y editar producto"""
-        dlg = tk.Toplevel(ventana)
-        dlg.title("Editar producto")
-        dlg.geometry("350x250")
-        dlg.resizable(False, False)
-        dlg.transient(ventana)
-        dlg.grab_set()
-
-        frm = ttk.Frame(dlg, padding=12)
-        frm.pack(fill="both", expand=True)
-
-        ttk.Label(frm, text="Producto a modificar:").grid(row=0, column=0, padx=6, pady=6)
-        v_busca = ttk.Entry(frm, width=25)
-        v_busca.grid(row=0, column=1, pady=6)
-
-        ttk.Label(frm, text="Nuevo nombre:").grid(row=1, column=0, padx=6, pady=6)
-        ttk.Label(frm, text="Nueva cantidad:").grid(row=2, column=0, padx=6, pady=6)
-        ttk.Label(frm, text="Nuevo precio:").grid(row=3, column=0, padx=6, pady=6)
-
-        vnombre = ttk.Entry(frm, width=25)
-        vcant = ttk.Entry(frm, width=25)
-        vprecio = ttk.Entry(frm, width=25)
-        vnombre.grid(row=1, column=1, pady=4)
-        vcant.grid(row=2, column=1, pady=4)
-        vprecio.grid(row=3, column=1, pady=4)
-
-        def aplicar():
-            prod = buscar_producto(v_busca.get())
-            if not prod:
-                messagebox.showerror("Error", "Producto no encontrado.")
-                return
-
-            if vnombre.get():
-                prod["producto"] = vnombre.get()
-            if vcant.get():
-                try:
-                    prod["cantidad"] = int(vcant.get())
-                except ValueError:
-                    messagebox.showerror("Error", "Cantidad inválida.")
-                    return
-            if vprecio.get():
-                try:
-                    prod["precio"] = float(vprecio.get())
-                    
-                except ValueError:
-                    messagebox.showerror("Error", "Precio inválido.")
-                    
-                    return
-
-            actualizar_tabla()
-            guardar_datos("stock.json", stock)
-            messagebox.showinfo("Éxito", "Producto actualizado.")
-            dlg.destroy()
-
-        ttk.Button(frm, text="Guardar cambios", command=aplicar).grid(row=4, column=0, columnspan=2, pady=10)
-
-    def eliminar_producto():
-        """Elimina un producto seleccionado"""
-        item = tree.selection()
-        if not item:
-            messagebox.showwarning("Aviso", "Seleccioná un producto para eliminar.")
+    if nuevo_nombre:
+        prod["producto"] = nuevo_nombre
+    if nuevo_cant:
+        try:
+            prod["cantidad"] = int(nuevo_cant)
+        except ValueError:
+            messagebox.showerror("Error", "Cantidad inválida.")
+            return
+    if nuevo_precio:
+        try:
+            prod["precio"] = float(nuevo_precio)
+        except ValueError:
+            messagebox.showerror("Error", "Precio inválido.")
             return
 
-        valores = tree.item(item, "values")
-        codigo = int(valores[0])
+    actualizar_tabla(tree)
+    messagebox.showinfo("Éxito", "Producto actualizado.")
+    dlg.destroy()
 
-        confirmar = messagebox.askyesno("Confirmar", f"¿Seguro que querés eliminar '{valores[1]}'?")
-        if confirmar:
-            global stock  
-            stockfiltrado = [p for p in stock if p["codigo"] != codigo] #actualizo el stock
-            stock[:] = stockfiltrado
-            guardar_datos("stock.json", stock)
-            actualizar_tabla()
-            messagebox.showinfo("Éxito", "Producto eliminado correctamente.")
+def editar_producto(parent, tree, stock):
+    """Abre diálogo para buscar y editar producto"""
+    ANCHO,ALTO=350,260
+    dlg = tk.Toplevel(parent)
+    dlg.title("Editar producto")
+    dlg.resizable(False, False)
+    centrar_ventana(dlg,ANCHO,ALTO)
+    dlg.transient(parent)
+    dlg.grab_set()
 
+    frm = ttk.Frame(dlg, padding=12)
+    frm.pack(fill="both", expand=True)
+
+    ttk.Label(frm, text="Producto a modificar:").grid(row=0, column=0, padx=6, pady=6, sticky="e")
+    v_busca = ttk.Entry(frm, width=25)
+    v_busca.grid(row=0, column=1, pady=6)
+
+    ttk.Label(frm, text="Nuevo nombre:").grid(row=1, column=0, padx=6, pady=6, sticky="e")
+    ttk.Label(frm, text="Nueva cantidad:").grid(row=2, column=0, padx=6, pady=6, sticky="e")
+    ttk.Label(frm, text="Nuevo precio:").grid(row=3, column=0, padx=6, pady=6, sticky="e")
+
+    nuevo_nombre = ttk.Entry(frm, width=25)
+    nuevo_cant   = ttk.Entry(frm, width=25)
+    nuevo_precio = ttk.Entry(frm, width=25)
+    nuevo_nombre.grid(row=1, column=1, pady=4)
+    nuevo_cant.grid(row=2, column=1, pady=4)
+    nuevo_precio.grid(row=3, column=1, pady=4)
+
+    ttk.Button(frm, text="Guardar cambios", command=lambda: aplicar(v_busca.get(),nuevo_nombre.get(),nuevo_cant.get(),nuevo_precio.get(),tree, stock, dlg)).grid(row=4, column=0, columnspan=2, pady=10)
+
+
+def eliminar_producto(tree, stock):
+    """Elimina un producto seleccionado"""
+    item = tree.selection()
+    if not item:
+        messagebox.showwarning("Aviso", "Seleccioná un producto para eliminar.")
+        return
+
+    valores = tree.item(item, "values")
+    codigo = int(valores[0])
+
+    confirmar = messagebox.askyesno("Confirmar", f"¿Seguro que querés eliminar '{valores[1]}'?")
+    if confirmar:
+        stockfiltrado = [p for p in stock if p["codigo"] != codigo]
+        stock[:] = stockfiltrado
+        actualizar_tabla(tree)
+        messagebox.showinfo("Éxito", "Producto eliminado correctamente.")
+
+
+def abrir_stock(parent):
+    ventana = tk.Toplevel(parent)
+    ventana.title("CodeBridge - Productos")
+    ANCHO,ALTO=950,500
+    centrar_ventana(ventana,ANCHO,ALTO)
 
     ttk.Label(ventana, text="📦Stock", font=("Segoe UI", 16, "bold")).pack(pady=10)
 
@@ -246,10 +238,10 @@ def abrir_stock(parent):
     botones = ttk.Frame(ventana)
     botones.pack(pady=10)
 
-    tk.Button(botones, text="➕ Añadir producto", bg="#8EB2E9", command=agregar_producto).grid(row=0, column=0, padx=10)
-    tk.Button(botones, text="✏️ Editar producto", bg="#8EB2E9", command=editar_producto).grid(row=0, column=1, padx=10)
+    tk.Button(botones, text="➕ Añadir producto", bg="#8EB2E9", command=lambda: agregar_producto(ventana, tree, stock)).grid(row=0, column=0, padx=10)
+    tk.Button(botones, text="✏️ Editar producto", bg="#8EB2E9", command=lambda: editar_producto(ventana, tree, stock)).grid(row=0, column=1, padx=10)
     tk.Button(botones, text="🔎 Buscar producto", bg="#8EB2E9", command=lambda: ventanabusqueda(ventana, stock)).grid(row=0, column=2, padx=10)
-    tk.Button(botones, text="❌ Eliminar producto", bg="#FC7F7F", command=eliminar_producto).grid(row=0, column=2, padx=10)
+    tk.Button(botones, text="❌ Eliminar producto", bg="#FC7F7F", command=lambda: eliminar_producto(tree,stock)).grid(row=0, column=2, padx=10)
 
     actualizar_tabla()
 
@@ -273,11 +265,12 @@ def cerrar_sesion(menu, root, entry_usuario, entry_contraseña):
 
 # ---------------- ADMIN: CREAR CUENTA ----------------
 def abrir_crear_cuenta():
+    ANCHO, ALTO = 320, 220
     ventana = tk.Toplevel()
     ventana.title("Crear cuenta")
-    ventana.geometry("320x220")
-    ventana.configure(bg="white")
     ventana.resizable(False, False)
+    ventana.configure(bg="white")
+    centrar_ventana(ventana,ANCHO,ALTO)
 
     frm = ttk.Frame(ventana, padding=12)
     frm.pack(fill="both", expand=True)
@@ -314,10 +307,11 @@ def abrir_crear_cuenta():
 # ---------------- ADMIN: BORRAR CUENTA ----------------
 def abrir_borrar_cuenta():
     ventana = tk.Toplevel()
+    ANCHO,ALTO=300,150
     ventana.title("Borrar cuenta")
-    ventana.geometry("300x150")
     ventana.configure(bg="white")
     ventana.resizable(False, False)
+    centrar_ventana(ventana, ANCHO, ALTO)
 
     frm = ttk.Frame(ventana, padding=12)
     frm.pack(fill="both", expand=True)
@@ -350,9 +344,10 @@ def abrir_menu(usuario, root):
 
     menu = tk.Toplevel(root)
     menu.title("Menú principal")
-    menu.geometry("500x550")
     menu.configure(bg="white")
+    ALTO,ANCHO=500,550
     menu.resizable(False, False)
+    centrar_ventana(menu, ANCHO, ALTO)
 
     ttk.Label(menu, text="CodeBridge - Sistema de ventas", font=("Segoe UI", 20, "bold")).pack(pady=10)
 
@@ -424,9 +419,10 @@ def iniciar_sesion(root, entry_usuario, entry_contraseña):
 # ---------------- VENTANA PRINCIPAL ----------------
 root = tk.Tk()
 root.title("CodeBridge - Inicio de sesión")
-root.geometry("400x400")
+ANCHOROOT, ALTOROOT = 400, 400
 root.configure(bg="white")
 root.resizable(False, False)
+centrar_ventana(root, ANCHOROOT, ALTOROOT)
 
 # Logo
 try:
