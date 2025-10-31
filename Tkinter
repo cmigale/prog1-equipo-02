@@ -241,7 +241,7 @@ def abrir_stock(parent):
     tk.Button(botones, text="➕ Añadir producto", bg="#8EB2E9", command=lambda: agregar_producto(ventana, tree, stock)).grid(row=0, column=0, padx=10)
     tk.Button(botones, text="✏️ Editar producto", bg="#8EB2E9", command=lambda: editar_producto(ventana, tree, stock)).grid(row=0, column=1, padx=10)
     tk.Button(botones, text="🔎 Buscar producto", bg="#8EB2E9", command=lambda: ventanabusqueda(ventana, stock)).grid(row=0, column=2, padx=10)
-    tk.Button(botones, text="❌ Eliminar producto", bg="#FC7F7F", command=lambda: eliminar_producto(tree,stock)).grid(row=0, column=2, padx=10)
+    tk.Button(botones, text="❌ Eliminar producto", bg="#FC7F7F", command=lambda: eliminar_producto(tree,stock)).grid(row=0, column=3, padx=10)
 
     actualizar_tabla()
 
