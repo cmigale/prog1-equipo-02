@@ -8,11 +8,12 @@ usuarios = {
 
 # ---------------- ADMIN: CREAR CUENTA ----------------
 def abrir_crear_cuenta():
+    ANCHO, ALTO = 320, 220
     ventana = tk.Toplevel()
     ventana.title("Crear cuenta")
-    ventana.geometry("320x220")
-    ventana.configure(bg="white")
     ventana.resizable(False, False)
+    ventana.configure(bg="white")
+    centrar_ventana(ventana,ANCHO,ALTO)
 
     frm = ttk.Frame(ventana, padding=12)
     frm.pack(fill="both", expand=True)
@@ -39,6 +40,7 @@ def abrir_crear_cuenta():
 
         usuarios[usuario] = {"contraseña": contraseña, "permiso": "usuario"}
         messagebox.showinfo("Éxito", f"Cuenta '{usuario}' creada.")
+        guardar_datos("usuarios.json", usuarios)
         ventana.destroy()
 
     tk.Button(frm, text="Crear cuenta", command=crear,
@@ -48,10 +50,11 @@ def abrir_crear_cuenta():
 # ---------------- ADMIN: BORRAR CUENTA ----------------
 def abrir_borrar_cuenta():
     ventana = tk.Toplevel()
+    ANCHO,ALTO=300,150
     ventana.title("Borrar cuenta")
-    ventana.geometry("300x150")
     ventana.configure(bg="white")
     ventana.resizable(False, False)
+    centrar_ventana(ventana, ANCHO, ALTO)
 
     frm = ttk.Frame(ventana, padding=12)
     frm.pack(fill="both", expand=True)
@@ -73,6 +76,7 @@ def abrir_borrar_cuenta():
 
         usuarios.pop(usuario)
         messagebox.showinfo("Éxito", f"Usuario '{usuario}' borrado.")
+        guardar_datos("usuarios.json", usuarios)
         ventana.destroy()
 
     ttk.Button(frm, text="Borrar", command=borrar).pack(pady=10)
