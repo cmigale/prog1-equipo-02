@@ -29,7 +29,22 @@ def centrar_ventana(ventana, ancho, alto):
     y = (ventana.winfo_screenheight() // 2) - (alto // 2)
     ventana.geometry(f'{ancho}x{alto}+{x}+{y}')
 
+
 #STOCK
+
+def actualizar_tabla(tree):
+    """Refresca la tabla de productos"""
+    tree.delete(*tree.get_children())
+    for producto in stock:
+        tree.insert(
+            "", "end",
+            values=(
+                producto["codigo"],
+                producto["producto"],
+                producto["cantidad"],
+                f"${producto['precio']:.2f}"
+            )
+        )
 
 def visualizarinfo(valor,dlg,stock):
     prod = buscar_producto(valor) 
