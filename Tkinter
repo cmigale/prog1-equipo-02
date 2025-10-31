@@ -269,6 +269,203 @@ def verificar_usuario(usuario):
 def verificar_contraseña(usuario, contraseña):
     return usuarios[usuario]["contraseña"] == contraseña
 
+# ---------------- SECCION CLIENTES ----------------
+
+clientes = cargar_datos("clientes.json", {})
+def normalizar_nombre(txt):
+    return str(txt).strip().lower()
+
+# ---------------- FUNCIONES CLIENTES ----------------
+def actualizar_tabla_clientes(tree):
+    tree.delete(*tree.get_children())
+    for nombre, datos in clientes.items():
+        tree.insert(
+            "", "end",
+            values=(nombre, datos.get("DNI", ""), datos.get("Teléfono", ""), datos.get("Mail", ""))
+        )
+
+
+def registrar_cliente_confirmar(dlg, nombre, v_dni, v_tel, v_mail, tree):
+    dni = v_dni.get().strip().lower()
+    telefono = v_tel.get().strip().lower()
+    mail = v_mail.get().strip().lower()
+
+    ok = messagebox.askyesno(
+        "Verificar datos",
+        f"Verifique los datos del cliente:\n\n"
+        f"Nombre y Apellido: {nombre}\n"
+        f"DNI: {dni}\nTeléfono: {telefono}\nMail: {mail}\n\n"
+        f"¿Son correctos los datos?"
+    )
+    if not ok:
+        return
+
+    clave = normalizar_nombre(nombre)
+    clientes[clave] = {"DNI": dni, "Teléfono": telefono, "Mail": mail}
+    guardar_datos("clientes.json", clientes)
+    messagebox.showinfo("Éxito", "Cliente registrado correctamente.")
+    dlg.destroy()
+    actualizar_tabla_clientes(tree)
+
+
+def registrar_cliente_gui(ventana, nombre, tree):
+    dlg = tk.Toplevel(ventana)
+    dlg.title("Registrar cliente")
+    dlg.geometry("380x260")
+    dlg.resizable(False, False)
+    dlg.transient(ventana)
+    dlg.grab_set()
+
+    frm = ttk.Frame(dlg, padding=12)
+    frm.pack(fill="both", expand=True)
+
+    ttk.Label(frm, text=f"Nombre y Apellido: {nombre}").grid(row=0, column=0, columnspan=2, pady=6)
+    ttk.Label(frm, text="DNI:").grid(row=1, column=0, sticky="e", padx=6, pady=6)
+    ttk.Label(frm, text="Teléfono:").grid(row=2, column=0, sticky="e", padx=6, pady=6)
+    ttk.Label(frm, text="Mail:").grid(row=3, column=0, sticky="e", padx=6, pady=6)
+
+    v_dni = ttk.Entry(frm, width=28)
+    v_tel = ttk.Entry(frm, width=28)
+    v_mail = ttk.Entry(frm, width=28)
+    v_dni.grid(row=1, column=1, pady=4)
+    v_tel.grid(row=2, column=1, pady=4)
+    v_mail.grid(row=3, column=1, pady=4)
+
+    ttk.Button(
+        frm, text="Confirmar",
+        command=lambda: registrar_cliente_confirmar(dlg, nombre, v_dni, v_tel, v_mail, tree)
+    ).grid(row=4, column=0, columnspan=2, pady=12)
+
+
+def continuar_busqueda(ventana, dlg, entry_nom, tree):
+    nombre_ing = entry_nom.get()
+    clave = normalizar_nombre(nombre_ing)
+    if not clave:
+        messagebox.showerror("Error", "Ingresá un nombre.")
+        return
+
+    if clave in clientes:
+        datos = clientes[clave]
+        messagebox.showinfo(
+            "Cliente encontrado",
+            f"Nombre: {nombre_ing}\nDNI: {datos.get('DNI', '')}\nTeléfono: {datos.get('Teléfono', '')}\nMail: {datos.get('Mail', '')}"
+        )
+        dlg.destroy()
+        actualizar_tabla_clientes(tree)
+    else:
+        crear = messagebox.askyesno("Crear", "El cliente no existe. ¿Desea crear un nuevo perfil?")
+        if crear:
+            dlg.destroy()
+            registrar_cliente_gui(ventana, nombre_ing, tree)
+        else:
+            messagebox.showinfo("Operación cancelada", "Operación cancelada.")
+            dlg.destroy()
+
+
+def buscar_o_crear_cliente(ventana, tree):
+    dlg = tk.Toplevel(ventana)
+    dlg.title("Buscar / Crear cliente")
+    dlg.geometry("380x180")
+    dlg.resizable(False, False)
+    dlg.transient(ventana)
+    dlg.grab_set()
+
+    frm = ttk.Frame(dlg, padding=12)
+    frm.pack(fill="both", expand=True)
+
+    ttk.Label(frm, text="Nombre y Apellido:").grid(row=0, column=0, padx=6, pady=6, sticky="e")
+    entry_nom = ttk.Entry(frm, width=28)
+    entry_nom.grid(row=0, column=1, pady=6)
+
+    ttk.Button(
+        frm, text="Continuar",
+        command=lambda: continuar_busqueda(ventana, dlg, entry_nom, tree)
+    ).grid(row=1, column=0, columnspan=2, pady=10)
+
+
+def mostrar_todos_clientes(tree):
+    if not clientes:
+        messagebox.showinfo("Clientes", "No hay clientes registrados.")
+    actualizar_tabla_clientes(tree)
+
+
+def eliminar_cliente(tree):
+    sel = tree.selection()
+    if not sel:
+        messagebox.showwarning("Aviso", "Seleccioná un cliente para eliminar.")
+        return
+    valores = tree.item(sel, "values")
+    nombre = valores[0]
+    confirmar = messagebox.askyesno("Confirmar", f"¿Seguro que querés eliminar '{nombre}'?")
+    if confirmar:
+        if nombre in clientes:
+            clientes.pop(nombre)
+            guardar_datos("clientes.json", clientes)
+            actualizar_tabla_clientes(tree)
+            messagebox.showinfo("Éxito", "Cliente eliminado correctamente.")
+
+# ---------------- VENTANA CLIENTES ----------------
+def abrir_clientes(parent):
+    ventana = tk.Toplevel(parent)
+    ventana.title("CodeBridge - Clientes")
+    ventana.geometry("900x520")
+
+    ttk.Label(ventana, text="👤 Clientes", font=("Segoe UI", 16, "bold")).pack(pady=10)
+
+    frame_tabla = ttk.Frame(ventana)
+    frame_tabla.pack(fill="both", expand=True, padx=20, pady=10)
+
+    scroll_y = ttk.Scrollbar(frame_tabla, orient="vertical")
+    tree = ttk.Treeview(
+        frame_tabla,
+        columns=("Nombre", "DNI", "Teléfono", "Mail"),
+        show="headings",
+        height=15,
+        yscrollcommand=scroll_y.set
+    )
+    scroll_y.config(command=tree.yview)
+    scroll_y.pack(side="right", fill="y")
+    tree.pack(fill="both", expand=True)
+
+    tree.heading("Nombre", text="Nombre")
+    tree.heading("DNI", text="DNI")
+    tree.heading("Teléfono", text="Teléfono")
+    tree.heading("Mail", text="Mail")
+
+    tree.column("Nombre", width=280, anchor="center")
+    tree.column("DNI", width=160, anchor="center")
+    tree.column("Teléfono", width=160, anchor="center")
+    tree.column("Mail", width=220, anchor="center")
+
+    botones = ttk.Frame(ventana)
+    botones.pack(pady=10)
+
+    tk.Button(
+        botones, text="🔎 Buscar / Crear", bg="#8EB2E9",
+        command=lambda: buscar_o_crear_cliente(ventana, tree)
+    ).grid(row=0, column=0, padx=10)
+
+    tk.Button(
+        botones, text="📋 Mostrar todos", bg="#8EB2E9",
+        command=lambda: mostrar_todos_clientes(tree)
+    ).grid(row=0, column=1, padx=10)
+
+    tk.Button(
+        botones, text="❌ Eliminar", bg="#FC7F7F",
+        command=lambda: eliminar_cliente(tree)
+    ).grid(row=0, column=2, padx=10)
+
+    actualizar_tabla_clientes(tree)
+
+
+# ---------------- FUNCIONES DE VERIFICACIÓN ----------------
+def verificar_usuario(usuario):
+    return usuario in usuarios
+
+
+def verificar_contraseña(usuario, contraseña):
+    return usuarios[usuario]["contraseña"] == contraseña
+
 
 # ---------------- SESIÓN ----------------
 def cerrar_sesion(menu, root, entry_usuario, entry_contraseña):
@@ -383,18 +580,15 @@ def abrir_menu(usuario, root):
               bg="#8EB2E9").grid(row=0, column=0, padx=10, pady=10)
     tk.Button(frm_botones, text="Historial", width=25,
               bg="#8EB2E9").grid(row=0, column=1, padx=10, pady=10)
-    tk.Button(
-        frm_botones,
-        text="Stock",
-        width=25,
-        bg="#8EB2E9",
-        command=lambda: abrir_stock(menu)
-    ).grid(row=1, column=0, padx=10, pady=10)
+    tk.Button(frm_botones, text="Stock", width=25,
+              bg="#8EB2E9", command=lambda: abrir_stock(menu)).grid(row=1, column=0, padx=10, pady=10)
+    tk.Button(frm_botones, text="Clientes", width=25,
+              bg="#8EB2E9", command=lambda: abrir_clientes(menu)).grid(row=1, column=1, padx=10, pady=10)
 
     tk.Button(frm_botones, text="Cerrar sesión", width=25, 
               bg="#FC7F7F",
                command=lambda: cerrar_sesion(menu, root, entry_usuario, entry_contraseña)
-               ).grid(row=1, column=1, padx=10, pady=10)
+               ).grid(row=2, column=1, padx=10, pady=10)
 
     # Opciones de administrador
     if permiso == "admin":
