@@ -1,0 +1,848 @@
+import tkinter as tk
+from tkinter import ttk, messagebox, PhotoImage, simpledialog
+import random
+import json
+import os
+from datetime import datetime
+
+# ---------------- DATOS ----------------
+usuarios = {
+    "admin": {"contraseña": "123", "permiso": "admin"},
+    "juan": {"contraseña": "123", "permiso": "usuario"}
+}
+
+# --------------STOCK------------------
+
+def cargar_datos(ruta, por_defecto):
+    if os.path.exists(ruta):
+        try:
+            with open(ruta, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except json.JSONDecodeError:
+            return por_defecto  # Si el JSON está corrupto, usa el por defecto
+    return por_defecto
+
+def guardar_datos(ruta, datos):
+    with open(ruta, "w", encoding="utf-8") as f:
+        json.dump(datos, f, indent=4, ensure_ascii=False)
+
+stock = cargar_datos("stock.json", [])
+historial_ventas = cargar_datos("historial.json", [])
+
+def centrar_ventana(ventana, ancho, alto):
+    """Calcula la posición para centrar una ventana en la pantalla."""
+    x = (ventana.winfo_screenwidth() // 2) - (ancho // 2)
+    y = (ventana.winfo_screenheight() // 2) - (alto // 2)
+    ventana.geometry(f'{ancho}x{alto}+{x}+{y}')
+
+#------------------VENTANA DE STOCK---------------------------
+
+def actualizar_tabla(tree):
+    """Refresca la tabla de productos"""
+    tree.delete(*tree.get_children())
+    for producto in stock:
+        tree.insert(
+            "", "end",
+            values=(
+                producto["codigo"],
+                producto["producto"],
+                producto["cantidad"],
+                f"${producto['precio']:.2f}"
+            )
+        )
+
+def guardar(name, quant, price, tree, stock, dlg):
+    nombre = name
+    try:
+        cantidad = int(quant)
+        precio = float(price)
+    except ValueError:
+        messagebox.showerror("Error", "Cantidad y precio deben ser numéricos.")
+        return
+    if nombre == "":
+        messagebox.showerror("Error", "El nombre no puede estar vacío.")
+        return
+
+    codigos_existentes = {p["codigo"] for p in stock}
+    codigo = random.randint(100000, 999999)
+    while codigo in codigos_existentes:
+                codigo = random.randint(100000, 999999)
+
+    stock.append({"codigo": codigo, "producto": nombre, "cantidad": cantidad, "precio": precio})
+    actualizar_tabla(tree)
+    guardar_datos("stock.json", stock)
+    messagebox.showinfo("Éxito", f"'{nombre}' agregado correctamente.")
+    dlg.destroy()
+
+def agregar_producto(parent, tree, stock):
+    """Abre una ventana para añadir un nuevo producto"""
+    ANCHO, ALTO = 320, 240
+    dlg = tk.Toplevel(parent)
+    dlg.title("Añadir producto")
+    dlg.resizable(False, False)
+    dlg.transient(parent)
+    dlg.grab_set()
+    centrar_ventana(dlg, ANCHO, ALTO)
+
+    frm = ttk.Frame(dlg, padding=12)
+    frm.pack(fill="both", expand=True)
+
+    ttk.Label(frm, text="Producto:").grid(row=0, column=0, sticky="e", padx=6, pady=6)
+    ttk.Label(frm, text="Cantidad:").grid(row=1, column=0, sticky="e", padx=6, pady=6)
+    ttk.Label(frm, text="Precio:").grid(row=2, column=0, sticky="e", padx=6, pady=6)
+
+    vnombre = ttk.Entry(frm, width=25)
+    vcant = ttk.Entry(frm, width=25)
+    vprecio = ttk.Entry(frm, width=25)
+    vnombre.grid(row=0, column=1, pady=4)
+    vcant.grid(row=1, column=1, pady=4)
+    vprecio.grid(row=2, column=1, pady=4)
+
+    ttk.Button(frm, text="Añadir", command=lambda: guardar(vnombre.get(), vcant.get(), vprecio.get(),
+                                                           tree, stock, dlg)).grid(row=3, column=0, columnspan=2, pady=10)
+
+def buscar_producto(valor, stock):
+    """Busca un producto por código o nombre"""
+    valor = str(valor).lower()
+    for producto in stock:
+        if str(producto["codigo"]) == valor or producto["producto"].lower() == valor:
+            return producto
+    return None
+
+def visualizarinfo(valor, dlg, stock):
+    prod = buscar_producto(valor, stock)
+    if prod is None:
+        messagebox.showwarning("Buscar", "Producto no encontrado.")
+        return
+    messagebox.showinfo(
+        "Producto encontrado",
+        f"Código: {prod['codigo']}\n"
+        f"Nombre: {prod['producto']}\n"
+        f"Cantidad: {prod['cantidad']}\n"
+        f"Precio: ${prod['precio']:.2f}"
+    )
+    dlg.destroy()
+
+
+def ventanabusqueda(parent, stock):
+    ANCHO, ALTO = 340, 140
+    dlg = tk.Toplevel(parent)
+    dlg.title("Buscar producto")
+    dlg.resizable(False, False)
+    centrar_ventana(dlg, ANCHO, ALTO)
+    dlg.transient(parent)
+    dlg.grab_set()
+
+    frm = ttk.Frame(dlg, padding=12)
+    frm.pack(fill="both", expand=True)
+    ttk.Label(frm, text="Código o nombre:").grid(row=0, column=0, padx=6, pady=6, sticky="e")
+    ent = ttk.Entry(frm, width=28)
+    ent.grid(row=0, column=1, padx=6, pady=6)
+    ent.focus()
+
+    ttk.Button(frm, text="Buscar",
+               command=lambda: visualizarinfo(ent.get(), dlg, stock)
+               ).grid(row=1, column=1, padx=6, pady=8, sticky="e")
+
+
+def aplicar(v_busca, nuevo_nombre, nuevo_cant, nuevo_precio, tree, stock, dlg):
+    """Aplica cambios de edición al producto encontrado"""
+    prod = buscar_producto(v_busca, stock)
+    if prod =="":
+        messagebox.showerror("Error", "Producto no encontrado.")
+        return
+
+    if nuevo_nombre:
+        prod["producto"] = nuevo_nombre
+    if nuevo_cant:
+        try:
+            prod["cantidad"] = int(nuevo_cant)
+        except ValueError:
+            messagebox.showerror("Error", "Cantidad inválida.")
+            return
+    if nuevo_precio:
+        try:
+            prod["precio"] = float(nuevo_precio)
+        except ValueError:
+            messagebox.showerror("Error", "Precio inválido.")
+            return
+
+    actualizar_tabla(tree)
+    guardar_datos("stock.json", stock)
+    messagebox.showinfo("Éxito", "Producto actualizado.")
+    dlg.destroy()
+
+def editar_producto(parent, tree, stock):
+    """Abre diálogo para buscar y editar producto"""
+
+    ANCHO, ALTO = 350, 260
+    dlg = tk.Toplevel(parent)
+    dlg.title("Editar producto")
+    dlg.resizable(False, False)
+    centrar_ventana(dlg, ANCHO, ALTO)
+    dlg.transient(parent)
+    dlg.grab_set()
+
+    frm = ttk.Frame(dlg, padding=12)
+    frm.pack(fill="both", expand=True)
+
+    ttk.Label(frm, text="Producto a modificar:").grid(row=0, column=0, padx=6, pady=6, sticky="e")
+    v_busca = ttk.Entry(frm, width=25)
+    v_busca.grid(row=0, column=1, pady=6)
+
+    ttk.Label(frm, text="Nuevo nombre:").grid(row=1, column=0, padx=6, pady=6, sticky="e")
+    ttk.Label(frm, text="Nueva cantidad:").grid(row=2, column=0, padx=6, pady=6, sticky="e")
+    ttk.Label(frm, text="Nuevo precio:").grid(row=3, column=0, padx=6, pady=6, sticky="e")
+
+    nuevo_nombre = ttk.Entry(frm, width=25)
+    nuevo_cant = ttk.Entry(frm, width=25)
+    nuevo_precio = ttk.Entry(frm, width=25)
+    nuevo_nombre.grid(row=1, column=1, pady=4)
+    nuevo_cant.grid(row=2, column=1, pady=4)
+    nuevo_precio.grid(row=3, column=1, pady=4)
+
+    ttk.Button(frm, text="Guardar cambios", command=lambda: aplicar(v_busca.get(), nuevo_nombre.get(), nuevo_cant.get(), nuevo_precio.get(), tree, stock, dlg)).grid(
+        row=4, column=0, columnspan=2, pady=10)
+
+def eliminar_producto(tree, stock):
+    item = tree.selection()
+    if item == "":
+        messagebox.showwarning("Error", "Seleccioná un producto para eliminar.")
+        return
+
+    valores = tree.item(item, "values")
+    codigo = int(valores[0])
+
+    confirmar = messagebox.askyesno("Confirmar", f"¿Seguro que querés eliminar '{valores[1]}'?")
+    if confirmar:
+        stockfiltrado = [p for p in stock if p["codigo"] != codigo]
+        stock[:] = stockfiltrado
+        actualizar_tabla(tree)
+        guardar_datos("stock.json", stock)
+        messagebox.showinfo("Éxito", "Producto eliminado correctamente.")
+
+#--------------- VENTANA DE STOCK --------------
+
+def abrir_stock(parent):
+    ventana = tk.Toplevel(parent)
+    ventana.title("CodeBridge - Productos")
+    ANCHO, ALTO = 950, 500
+    centrar_ventana(ventana, ANCHO, ALTO)
+
+    ttk.Label(ventana, text="📦 Stock", font=("Segoe UI", 16, "bold")).pack(pady=10)
+
+    stock_frame = ttk.Frame(ventana)
+    stock_frame.pack(fill="both", expand=True, padx=20, pady=10)
+
+    scroll_y = ttk.Scrollbar(stock_frame, orient="vertical")
+    tree = ttk.Treeview(
+        stock_frame,
+        columns=("Código", "Producto", "Cantidad", "Precio"),
+        show="headings",
+        height=15,
+        yscrollcommand=scroll_y.set
+    )
+    scroll_y.config(command=tree.yview)
+    scroll_y.pack(side="right", fill="y")
+    tree.pack(fill="both", expand=True)
+
+    # Encabezados y columnas
+    tree.heading("Código", text="Código")
+    tree.heading("Producto", text="Producto")
+    tree.heading("Cantidad", text="Cantidad")
+    tree.heading("Precio", text="Precio Unitario")
+
+    tree.column("Código", width=150, anchor="center")
+    tree.column("Producto", width=300, anchor="center")
+    tree.column("Cantidad", width=150, anchor="center")
+    tree.column("Precio", width=150, anchor="center")
+
+    # Botones inferiores
+    botones = ttk.Frame(ventana)
+    botones.pack(pady=10)
+
+    tk.Button(botones, text="➕ Añadir producto", bg="#8EB2E9", command=lambda: agregar_producto(ventana, tree, stock)).grid(row=0, column=0, padx=10)
+    tk.Button(botones, text="✏️ Editar producto", bg="#8EB2E9", command=lambda: editar_producto(ventana, tree, stock)).grid(row=0, column=1, padx=10)
+    tk.Button(botones, text="🔎 Buscar producto", bg="#8EB2E9", command=lambda: ventanabusqueda(ventana, stock)).grid(row=0, column=2, padx=10)
+    tk.Button(botones, text="❌ Eliminar producto", bg="#FC7F7F", command=lambda: eliminar_producto(tree, stock)).grid(row=0, column=3, padx=10)
+
+    actualizar_tabla(tree)
+
+#---------MODULO DE VENTAS----------------------------------
+def actualizar_venta_treeview(venta_actual, tree_venta,
+                            etiqueta_total_base, etiqueta_total_final, etiqueta_vuelto):
+    """Limpia y repuebla el Treeview de la venta actual."""
+    total = sum(p["subtotal"] for p in venta_actual)
+
+    for i in tree_venta.get_children():
+        tree_venta.delete(i)
+
+    for i, p in enumerate(venta_actual, start=1):
+        tree_venta.insert("", "end", text=str(i), values=(
+            p["codigo"],
+            p["producto"],
+            p["cantidad"],
+            f"${p['precio']:.2f}",
+            f"${p['subtotal']:.2f}"
+        ))
+
+   
+    etiqueta_total_base.config(text=f"Total Base: ${total:,.2f}")
+    etiqueta_total_final.config(text=f"TOTAL FINAL: ${total:,.2f}")  # Reinicia el final
+    etiqueta_vuelto.config(text=f"Vuelto: $0.00")
+
+    return total
+
+def agregar_producto_a_venta(entrada_busqueda, ventana, venta_actual,
+                             stock, tree_venta, etiqueta_total_base,
+                             etiqueta_total_final, etiqueta_vuelto,
+                             buscar_producto, guardar_datos):
+    
+    entrada = entrada_busqueda.get()
+    if entrada=="":
+        messagebox.showerror("Error", "Ingrese código o nombre del producto.", parent=ventana)
+        return
+
+    producto_stock = buscar_producto(entrada, stock)
+
+    if producto_stock=="":
+        messagebox.showerror("Error", "Producto no encontrado.", parent=ventana)
+        return
+
+
+    if any(p["codigo"] == producto_stock["codigo"] for p in venta_actual):
+        messagebox.showerror("Error", "Este producto ya está en la venta.", parent=ventana)
+        return
+
+    try:
+        cantidad = simpledialog.askinteger("Cantidad", f"Ingrese cantidad para {producto_stock['producto']}:", parent=ventana, minvalue=1)
+
+        if cantidad == None:  # Si el usuario cancela
+            return
+
+        if cantidad > producto_stock["cantidad"]:
+            messagebox.showerror("Error", f"Stock insuficiente. Disponible: {producto_stock['cantidad']}", parent=ventana)
+            return
+
+        # Actualizar stock
+        producto_stock["cantidad"] -= cantidad
+
+        # Agregar a la venta
+        subtotal = cantidad * producto_stock["precio"]
+        venta_actual.append({
+            "codigo": producto_stock["codigo"],
+            "producto": producto_stock["producto"],
+            "cantidad": cantidad,
+            "precio": producto_stock["precio"],  
+            "subtotal": subtotal
+        })
+
+        messagebox.showinfo("Éxito", f"{producto_stock['producto']} agregado con subtotal ${subtotal:.2f}", parent=ventana)
+
+       
+        guardar_datos("stock.json", stock)
+
+        # Actualizar la interfaz (llamando a la nueva función)
+        actualizar_venta_treeview(venta_actual, tree_venta, etiqueta_total_base, etiqueta_total_final, etiqueta_vuelto)
+        entrada_busqueda.delete(0, tk.END)  # Limpiar campo de búsqueda
+
+    except ValueError:
+        messagebox.showerror("Error", "Debe ingresar un número entero válido.", parent=ventana)
+
+def eliminar_producto_de_venta(ventana, venta_actual, tree_venta, stock, buscar_producto, guardar_datos,
+                             etiqueta_total_base, etiqueta_total_final, etiqueta_vuelto):
+    
+    seleccion = tree_venta.selection()
+    if seleccion=="":
+        messagebox.showerror("Error", "Seleccione un producto de la venta para eliminar.", parent=ventana)
+        return
+
+    try:
+        item_id = seleccion[0]
+        index_a_eliminar = tree_venta.index(item_id)
+
+        if 0 <= index_a_eliminar < len(venta_actual):
+            borrado = venta_actual.pop(index_a_eliminar)
+
+            # Actualizar stock (buscar el producto por código)
+            producto_stock = buscar_producto(borrado["codigo"], stock)
+            if producto_stock:
+                producto_stock["cantidad"] += borrado["cantidad"]
+
+            messagebox.showinfo("Éxito", f"{borrado['producto']} eliminado y stock restaurado.", parent=ventana)
+
+            
+            guardar_datos("stock.json", stock)
+
+            # Actualizar la interfaz (llamando a la nueva función)
+            actualizar_venta_treeview(venta_actual, tree_venta, etiqueta_total_base, etiqueta_total_final, etiqueta_vuelto)
+        else:
+            messagebox.showerror("Error", "Error al encontrar el producto para eliminar.", parent=ventana)
+    except IndexError:
+        messagebox.showerror("Error", "Error al seleccionar. Intente de nuevo.", parent=ventana)
+
+def finalizar_venta(ventana, venta_actual, historial_ventas,
+                      metodo_pago_var, tree_venta,
+                      etiqueta_total_base, etiqueta_total_final, etiqueta_vuelto,
+                      guardar_datos, generar_ticket_final):
+    
+
+    if venta_actual=="":
+        messagebox.showerror("Error", "No hay productos en la venta.", parent=ventana)
+        return
+
+    total_base = sum(p["subtotal"] for p in venta_actual)
+    total_final = total_base
+    mensaje_recargo = "No se aplicaron modificaciones."
+
+    opcion_pago = metodo_pago_var.get()
+
+    # Lógica de pago original (descuentos/recargos)
+    if opcion_pago == "Efectivo":
+        descuento = total_base * 0.10
+        total_final = total_base - descuento
+        mensaje_recargo = f"Descuento efectivo (10%): -${descuento:.2f}"
+
+    elif opcion_pago == "Billetera virtual":
+        descuento = total_base * 0.10
+        total_final = total_base - descuento
+        mensaje_recargo = f"Descuento B. virtual (10%): -${descuento:.2f}"
+
+    elif opcion_pago == "Tarjeta de crédito":
+        cuotas_str = simpledialog.askstring("Cuotas", "¿En cuántas cuotas? (3, 6 o 12):", parent=ventana)
+        try:
+            cuotas = int(cuotas_str)
+            interes = 0.0
+            if cuotas == 3:
+                interes = 0.03
+            elif cuotas == 6:
+                interes = 0.05
+            elif cuotas == 12:
+                interes = 0.08
+            else:
+                raise ValueError
+
+            recargo = total_base * interes
+            total_final = total_base + recargo
+            porcentaje = int(interes * 100)
+            pago_cuota = round(total_final / cuotas, 2)
+            mensaje_recargo = (f"Recargo {cuotas} cuotas ({porcentaje}%): +${recargo:.2f}\n"
+                             f"Pago en {cuotas} cuotas de ${pago_cuota:.2f}")
+        except (ValueError, TypeError):
+            messagebox.showwarning("Advertencia", "Cuotas inválidas. Usando Total Base.", parent=ventana)
+            total_final = total_base
+            mensaje_recargo = "No se aplicaron recargos (Cuotas inválidas)."
+
+    elif opcion_pago == "Débito":
+        mensaje_recargo = "Pago con débito. Sin recargos."
+
+    # Mostrar resultados
+    messagebox.showinfo("Resumen de Pago", f"{mensaje_recargo}\nTotal a pagar: ${total_final:.2f}", parent=ventana)
+    etiqueta_total_final.config(text=f"TOTAL FINAL: ${total_final:,.2f}", foreground='red')
+
+    # Gestión de Vuelto
+    monto_str = simpledialog.askstring("Monto Entregado", "Monto entregado por el cliente ($):", parent=ventana)
+    vuelto = 0.0
+    try:
+        monto = float(monto_str)
+        if monto < total_final:
+            messagebox.showerror("Vuelto", f"Monto insuficiente. Faltan: ${total_final - monto:.2f}", parent=ventana)
+        else:
+            vuelto = monto - total_final
+            messagebox.showinfo("Vuelto", f"Vuelto a entregar: ${vuelto:.2f}", parent=ventana)
+            etiqueta_vuelto.config(text=f"Vuelto: ${vuelto:.2f}", foreground='blue')
+
+            # Venta exitosa:
+            # 1. Generar Ticket 
+            generar_ticket_final(ventana, venta_actual, total_base, total_final, monto, vuelto, mensaje_recargo, opcion_pago)
+
+            # 2. Guardar en Historial 
+            nueva_venta_dict = {
+                "id_venta": datetime.now().strftime("%Y%m%d%H%M%S") + str(random.randint(100, 999)),
+                "fecha_hora": datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
+                "productos": list(venta_actual),  # Copia
+                "total_base": total_base,
+                "total_final": total_final,
+                "metodo_pago": opcion_pago,
+                "monto_cliente": monto,
+                "vuelto": vuelto,
+                "detalle_modificador": mensaje_recargo.splitlines()[0]
+            }
+            historial_ventas.append(nueva_venta_dict)
+            guardar_datos("historial.json", historial_ventas)
+
+            messagebox.showinfo("Venta Finalizada", "¡Venta completada con éxito!", parent=ventana)
+
+            # 3. Limpiar carrito
+            venta_actual.clear()
+            # --- CAMBIO ---
+            actualizar_venta_treeview(venta_actual, tree_venta, etiqueta_total_base, etiqueta_total_final, etiqueta_vuelto)
+            etiqueta_total_base.config(text="Total Base: $0.00")
+
+    except (ValueError, TypeError):
+        messagebox.showerror("Error", "Monto ingresado no válido o transacción cancelada.", parent=ventana)
+
+def generar_ticket_final(ventana, venta_actual, total_base, total_final,
+                         monto_cliente, vuelto, detalle_recargo, detalle_pago_tipo):
+
+    fecha = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    descuento = total_base - total_final if total_base > total_final else 0
+    recargo = total_final - total_base if total_final > total_base else 0
+
+    ticket_texto = "===================================\n"
+    ticket_texto += "        TICKET DE COMPRA         \n"
+    ticket_texto += "===================================\n"
+    ticket_texto += f"Fecha: {fecha}\n"
+    ticket_texto += "-" * 35 + "\n"
+    ticket_texto += f"{'Producto':<15}{'Cant':<6}{'Subtot($)':>10}\n"
+    ticket_texto += "-" * 35 + "\n"
+
+    for p in venta_actual:
+        nombre = p["producto"][:15]  # Corta el nombre si es muy largo
+        cantidad = p["cantidad"]
+        subtotal = p["subtotal"]
+        ticket_texto += f"{nombre:<15}{cantidad:<6}${subtotal:>8.2f}\n"
+
+    ticket_texto += "-" * 35 + "\n"
+    ticket_texto += f"{'TOTAL COMPRA:':<20}${total_base:>10.2f}\n"
+
+    if descuento > 0:
+        ticket_texto += f"{'Descuento:':<20}-${descuento:>9.2f}\n"
+    if recargo > 0:
+        ticket_texto += f"{'Recargo:':<20}+${recargo:>9.2f}\n"
+
+    ticket_texto += "-" * 35 + "\n"
+    ticket_texto += f"{'TOTAL A PAGAR:':<20}${total_final:>10.2f}\n"
+    ticket_texto += f"{'Monto cliente:':<20}${monto_cliente:>10.2f}\n"
+    ticket_texto += f"{'Vuelto:':<20}${vuelto:>10.2f}\n"
+    ticket_texto += "-" * 35 + "\n"
+    ticket_texto += f"Método: {detalle_pago_tipo}\n"
+    ticket_texto += f"Detalle: {detalle_recargo.splitlines()[0]}\n"
+    ticket_texto += "¡Gracias por su compra!\n"
+    ticket_texto += "===================================\n"
+
+    ventana_popup = tk.Toplevel(ventana)
+    ventana_popup.title("Ticket")
+    ventana_popup.transient(ventana)
+    ventana_popup.grab_set()
+
+    caja_ticket_popup = tk.Text(ventana_popup, wrap='none', height=25, width=40, font=('Courier', 10))
+    caja_ticket_popup.pack(padx=10, pady=10)
+    caja_ticket_popup.insert(tk.END, ticket_texto)
+    caja_ticket_popup.config(state=tk.DISABLED)
+
+    ttk.Button(ventana_popup, text="Cerrar", command=ventana_popup.destroy).pack(pady=(0, 10))
+
+
+def abrir_nueva_venta(parent, stock, historial_ventas, buscar_producto, guardar_datos):
+
+    # Esta variable SÓLO existe mientras la ventana está abierta
+    venta_actual = []
+    # Recargamos los datos al abrir la ventana 
+    stock = cargar_datos("stock.json", [])
+    historial_ventas = cargar_datos("historial.json", [])
+
+    ventana = tk.Toplevel(parent)
+    ventana.title("Sistema de Venta (CodeBridge)")
+    ventana.geometry("550x550")  # Geometría adaptada al Treeview
+    ventana.transient(parent)
+    ventana.grab_set()
+
+    # --- Interfaz de TPV 
+
+    frame_main = ttk.Frame(ventana, padding="10")
+    frame_main.pack(fill='both', expand=True)
+
+    # --- Búsqueda y Adición 
+    frame_busqueda = ttk.Frame(frame_main)
+    frame_busqueda.pack(fill='x', pady=5)
+
+    ttk.Label(frame_busqueda, text="Buscar Código/Nombre:").pack(side='left', padx=5)
+    entrada_busqueda = ttk.Entry(frame_busqueda, width=20)
+    entrada_busqueda.pack(side='left', fill='x', expand=True, padx=5)
+
+    ttk.Button(frame_busqueda, text="Añadir Producto", command=lambda: agregar_producto_a_venta(
+        entrada_busqueda, ventana, venta_actual, stock, tree_venta,
+        etiqueta_total_base, etiqueta_total_final, etiqueta_vuelto,
+        buscar_producto, guardar_datos
+    )).pack(side='left')
+
+    # --- Carrito 
+    frame_carrito = ttk.LabelFrame(frame_main, text="Carrito", padding="10")
+    frame_carrito.pack(fill='both', expand=True, pady=5)
+
+    scroll_venta = ttk.Scrollbar(frame_carrito, orient="vertical")
+
+    columnas_venta = ('Código', 'Producto', 'Cant.', 'Precio Unit.', 'Subtotal')
+    tree_venta = ttk.Treeview(frame_carrito, columns=columnas_venta, show='headings', height=8, yscrollcommand=scroll_venta.set)
+
+    for col in columnas_venta:
+        tree_venta.heading(col, text=col)
+        tree_venta.column(col, anchor='center', width=70)
+
+    tree_venta.column('Producto', anchor='w', width=120)
+    tree_venta.column('Subtotal', anchor='e', width=90)
+    tree_venta.column('Cant.', anchor='center', width=50)
+
+    scroll_venta.config(command=tree_venta.yview)
+    scroll_venta.pack(side="right", fill="y")
+    tree_venta.pack(fill="both", expand=True)
+
+    ttk.Button(
+        frame_main,
+        text="Eliminar Producto Seleccionado",
+        command=lambda: eliminar_producto_de_venta(
+            ventana, venta_actual, tree_venta,
+            stock, buscar_producto, guardar_datos,
+            etiqueta_total_base, etiqueta_total_final, etiqueta_vuelto
+        )).pack(fill='x', pady=5)
+
+    frame_totales = ttk.Frame(frame_main)
+    frame_totales.pack(fill='x', pady=10)
+
+    etiqueta_total_base = ttk.Label(frame_totales, text="Total Base: $0.00", font=('Arial', 10))
+    etiqueta_total_base.pack(side='left')
+
+    etiqueta_total_final = ttk.Label(frame_totales, text="TOTAL FINAL: $0.00", font=('Arial', 12, 'bold'), foreground='red')
+    etiqueta_total_final.pack(side='right')
+
+    frame_pago = ttk.Frame(frame_main)
+    frame_pago.pack(fill='x', pady=5)
+
+    ttk.Label(frame_pago, text="Método de Pago:").pack(side='left', padx=5)
+    metodo_pago_options = ["Débito", "Efectivo", "Billetera virtual", "Tarjeta de crédito"]
+    metodo_pago_var = tk.StringVar(ventana)
+    metodo_pago_var.set(metodo_pago_options[0])
+
+    opcion_pago_menu = ttk.OptionMenu(frame_pago, metodo_pago_var, metodo_pago_options[0], *metodo_pago_options)
+    opcion_pago_menu.pack(side='left', padx=5, fill='x', expand=True)
+
+    ttk.Button(frame_pago, text="Finalizar Venta (Aplicar Pago)",
+               command=lambda: finalizar_venta(
+                   ventana, venta_actual, historial_ventas,
+                   metodo_pago_var, tree_venta,
+                   etiqueta_total_base, etiqueta_total_final, etiqueta_vuelto,
+                   guardar_datos, generar_ticket_final
+               )).pack(side='right')
+
+    # --- Vuelto 
+    etiqueta_vuelto = ttk.Label(frame_main, text="Vuelto: $0.00", font=('Arial', 12, 'bold'))
+    etiqueta_vuelto.pack(fill='x', pady=5)
+
+    # Carga inicial
+    actualizar_venta_treeview(
+        venta_actual, tree_venta,
+        etiqueta_total_base, etiqueta_total_final, etiqueta_vuelto
+    )
+
+# ---------------- FUNCIONES DE VERIFICACIÓN ----------------
+def verificar_usuario(usuario):
+    return usuario in usuarios
+
+def verificar_contraseña(usuario, contraseña):
+    return usuarios[usuario]["contraseña"] == contraseña
+
+# ---------------- SESIÓN ----------------
+def cerrar_sesion(menu, root, entry_usuario, entry_contraseña):
+    menu.destroy()
+    entry_usuario.delete(0, tk.END)
+    entry_contraseña.delete(0, tk.END)
+    root.deiconify()
+
+# ---------------- ADMIN: CREAR CUENTA ----------------
+def abrir_crear_cuenta():
+    ANCHO, ALTO = 320, 220
+    ventana = tk.Toplevel()
+    ventana.title("Crear cuenta")
+    ventana.resizable(False, False)
+    centrar_ventana(ventana, ANCHO, ALTO)
+
+    frm = ttk.Frame(ventana, padding=12)
+    frm.pack(fill="both", expand=True)  
+
+    ttk.Label(frm, text="Usuario nuevo:").grid(row=0, column=0, padx=6, pady=6, sticky="e")
+    ttk.Label(frm, text="Contraseña:").grid(row=1, column=0, padx=6, pady=6, sticky="e")
+
+    entry_usuario = ttk.Entry(frm, width=25)
+    entry_contraseña = ttk.Entry(frm, show="*", width=25)
+    entry_usuario.grid(row=0, column=1, pady=4)
+    entry_contraseña.grid(row=1, column=1, pady=4)
+
+    def crear():
+        usuario = entry_usuario.get().strip()
+        contraseña = entry_contraseña.get().strip()
+
+        if usuario=="" or contraseña=="":
+            messagebox.showerror("Error", "Complete todos los campos.")
+            return
+
+        if usuario in usuarios:
+            messagebox.showerror("Error", "El usuario ya existe.")
+            return
+
+        usuarios[usuario] = {"contraseña": contraseña, "permiso": "usuario"}
+        messagebox.showinfo("Éxito", f"Cuenta '{usuario}' creada.")
+        ventana.destroy()
+
+    tk.Button(frm, text="Crear cuenta", command=crear,
+              bg="#8EB2E9", fg="white").grid(row=2, column=0, columnspan=2, pady=10)
+
+# ---------------- ADMIN: BORRAR CUENTA ----------------
+def abrir_borrar_cuenta():
+    ventana = tk.Toplevel()
+    ANCHO, ALTO = 300, 150
+    ventana.title("Borrar cuenta")
+    ventana.resizable(False, False)
+    centrar_ventana(ventana, ANCHO, ALTO)
+
+    frm = ttk.Frame(ventana, padding=12)
+    frm.pack(fill="both", expand=True)
+
+    ttk.Label(frm, text="Usuario a borrar:").pack(pady=5)
+    entry_usuario = ttk.Entry(frm, width=25)
+    entry_usuario.pack()
+
+    def borrar():
+        usuario = entry_usuario.get().strip()
+
+        if usuario not in usuarios:
+            messagebox.showerror("Error", "Usuario no encontrado.")
+            return
+
+        if usuario == "admin":
+            messagebox.showerror("Error", "No se puede borrar al admin.")
+            return
+
+        usuarios.pop(usuario)
+        messagebox.showinfo("Éxito", f"Usuario '{usuario}' borrado.")
+        ventana.destroy()
+
+    ttk.Button(frm, text="Borrar", command=borrar).pack(pady=10)
+
+# ---------------- MENÚ PRINCIPAL ----------------
+def abrir_menu(usuario, root):
+    permiso = usuarios[usuario]["permiso"]
+
+    menu = tk.Toplevel(root)
+    menu.title("Menú principal")
+    menu.configure(bg="white")
+    ALTO, ANCHO = 500, 550
+    menu.resizable(False, False)
+    centrar_ventana(menu, ANCHO, ALTO)
+
+    tk.Label(menu, text="CodeBridge - Sistema de ventas", font=("Segoe UI", 20, "bold"), bg="white").pack(pady=10)
+
+    # Logo
+    try:
+        logo = PhotoImage(file="logo.png")
+        tk.Label(menu, image=logo, bg="white").pack(pady=10)
+        menu.logo = logo
+    except:
+        tk.Label(menu, text="[Logo]", font=("Segoe UI", 14),
+                 bg="white").pack(pady=10)
+
+    # Botones principales
+    frm_botones = tk.Frame(menu, bg="white")
+    frm_botones.pack(padx=10, pady=15)
+
+    tk.Button(
+        frm_botones, text="Nueva venta", width=25, bg="#6c63ff", fg="white",
+        font=("Segoe UI", 11, "bold"),
+        # Conectado a la nueva ventana de venta fusionada
+        command=lambda: abrir_nueva_venta(menu, stock, historial_ventas, buscar_producto, guardar_datos)
+    ).grid(row=0, column=0, padx=10, pady=10)
+
+    tk.Button(frm_botones, text="Historial", width=25,
+              bg="#6c63ff", fg="white", font=("Segoe UI", 11, "bold")).grid(row=0, column=1, padx=10, pady=10)
+
+    # Conectado a la ventana de stock
+    tk.Button(
+        frm_botones,
+        text="Stock",
+        width=25,
+        bg="#6c63ff",
+        command=lambda: abrir_stock(menu),
+        fg="white",
+        font=("Segoe UI", 11, "bold")
+    ).grid(row=1, column=0, padx=10, pady=10)
+
+    tk.Button(
+        frm_botones,
+        text="Cerrar sesión",
+        width=25,
+        bg="#F71010",
+        font=("Segoe UI", 11, "bold"),
+        fg="white",
+        command=lambda: cerrar_sesion(menu, root, entry_usuario, entry_contraseña)
+    ).grid(row=1, column=1, padx=10, pady=10)
+
+    # Opciones de administrador
+    if permiso == "admin":
+        ttk.Separator(menu, orient="horizontal").pack(fill="x", pady=10)
+        tk.Label(menu, text="Opciones de administrador", font=("Segoe UI", 10, "bold"), bg="white").pack(pady=5)
+        frm_admin = tk.Frame(menu, bg="white")
+        frm_admin.pack(padx=10, pady=10)
+
+        tk.Button(frm_admin, text="👤 Crear cuenta", bg="#B0E29B", width=25, command=abrir_crear_cuenta).grid(row=0, column=0, padx=10, pady=5)
+        tk.Button(frm_admin, text="❌ Borrar cuenta", bg="#E97070", width=25, command=abrir_borrar_cuenta).grid(row=1, column=0, padx=10, pady=5)
+
+    # Al cerrar la ventana
+    def volver_login():
+        menu.destroy()
+        root.deiconify()
+
+    menu.protocol("WM_DELETE_WINDOW", volver_login)
+
+# ---------------- LOGIN ----------------
+def iniciar_sesion(root, entry_usuario, entry_contraseña):
+    usuario = entry_usuario.get().strip()
+    contraseña = entry_contraseña.get().strip()
+
+    if not verificar_usuario(usuario):
+        messagebox.showerror("Error", "Usuario no encontrado.")
+        return
+
+    if not verificar_contraseña(usuario, contraseña):
+        messagebox.showerror("Error", "Contraseña incorrecta.")
+        return
+
+    messagebox.showinfo("Bienvenido", f"Sesión iniciada como {usuario}.")
+    root.withdraw()
+    abrir_menu(usuario, root)
+
+# ---------------- VENTANA PRINCIPAL ----------------
+root = tk.Tk()
+root.configure(bg="white")
+root.title("CodeBridge - Inicio de sesión")
+ANCHOROOT, ALTOROOT = 400, 400
+root.resizable(False, False)
+centrar_ventana(root, ANCHOROOT, ALTOROOT)
+
+# Logo
+try:
+    logo = PhotoImage(file="logo.png")
+    tk.Label(root, image=logo, bg="white").pack(pady=10)
+    root.logo = logo
+except:
+    tk.Label(root, text="[Logo]", font=("Segoe UI", 14)).pack(pady=10)
+
+tk.Label(root, bg="white", text="Inicio de sesión", font=("Segoe UI", 14, "bold")).pack(pady=5)
+
+# Campos de entrada
+frm_login = tk.Frame(root, bg="white")
+frm_login.pack(pady=10, padx=12)
+
+tk.Label(frm_login, text="Usuario:", bg="white").grid(row=0, column=0, sticky="e", padx=6, pady=4)
+entry_usuario = ttk.Entry(frm_login, width=25)
+entry_usuario.grid(row=0, column=1, pady=4)
+
+tk.Label(frm_login, text="Contraseña:", bg="white").grid(row=1, column=0, sticky="e", padx=6, pady=4)
+entry_contraseña = ttk.Entry(frm_login, show="*", width=25)
+entry_contraseña.grid(row=1, column=1, pady=4)
+
+# Botón de inicio
+tk.Button(root, text="Iniciar sesión",
+          command=lambda: iniciar_sesion(root, entry_usuario, entry_contraseña),
+          bg="#6498E7", fg="white", width=20).pack(pady=15)
+
+root.mainloop()
