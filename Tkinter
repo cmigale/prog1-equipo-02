@@ -561,7 +561,7 @@ def abrir_menu(usuario, root):
     menu.resizable(False, False)
     centrar_ventana(menu, ANCHO, ALTO)
 
-    ttk.Label(menu, text="CodeBridge - Sistema de ventas", font=("Segoe UI", 20, "bold")).pack(pady=10)
+    tk.Label(menu, text="CodeBridge - Sistema de ventas", font=("Segoe UI", 20, "bold"), bg="white").pack(pady=10)
 
     # Logo
     try:
@@ -573,29 +573,29 @@ def abrir_menu(usuario, root):
                  bg="white").pack(pady=10)
 
     # Botones principales
-    frm_botones = ttk.Frame(menu, padding=10)
-    frm_botones.pack(pady=15)
+    frm_botones = tk.Frame(menu, bg="white")
+    frm_botones.pack(pady=15, padx=10)
 
     tk.Button(frm_botones, text="Nueva venta", width=25,
-              bg="#8EB2E9").grid(row=0, column=0, padx=10, pady=10)
+              bg="#6c63ff", fg="white", font=("Segoe UI", 11, "bold")).grid(row=0, column=0, padx=10, pady=10)
     tk.Button(frm_botones, text="Historial", width=25,
-              bg="#8EB2E9").grid(row=0, column=1, padx=10, pady=10)
+              bg="#6c63ff", fg="white", font=("Segoe UI", 11, "bold")).grid(row=0, column=1, padx=10, pady=10)
     tk.Button(frm_botones, text="Stock", width=25,
-              bg="#8EB2E9", command=lambda: abrir_stock(menu)).grid(row=1, column=0, padx=10, pady=10)
+              bg="#6c63ff", fg="white",font=("Segoe UI", 11, "bold"), command=lambda: abrir_stock(menu)).grid(row=1, column=0, padx=10, pady=10)
     tk.Button(frm_botones, text="Clientes", width=25,
-              bg="#8EB2E9", command=lambda: abrir_clientes(menu)).grid(row=1, column=1, padx=10, pady=10)
+              bg="#6c63ff", fg="white",font=("Segoe UI", 11, "bold"), command=lambda: abrir_clientes(menu)).grid(row=1, column=1, padx=10, pady=10)
 
     tk.Button(frm_botones, text="Cerrar sesión", width=25, 
-              bg="#FC7F7F",
+              bg="#F71010",fg="white,font=("Segoe UI", 11, "bold"),
                command=lambda: cerrar_sesion(menu, root, entry_usuario, entry_contraseña)
                ).grid(row=2, column=1, padx=10, pady=10)
 
     # Opciones de administrador
     if permiso == "admin":
         ttk.Separator(menu, orient="horizontal").pack(fill="x", pady=10)
-        ttk.Label(menu, text="Opciones de administrador", font=("Segoe UI", 10, "bold")).pack(pady=5)
-        frm_admin = ttk.Frame(menu, padding=10)
-        frm_admin.pack()
+        tk.Label(menu, text="Opciones de administrador", font=("Segoe UI", 10, "bold"), bg="white").pack(pady=5)
+        frm_admin = tk.Frame(menu, bg="white")
+        frm_admin.pack(padx=10, pady=10)
 
         tk.Button(frm_admin, text="👤 Crear cuenta", bg="#B0E29B", width=25, command=abrir_crear_cuenta).grid(row=0, column=0, padx=10, pady=5)
         tk.Button(frm_admin, text="❌ Borrar cuenta", bg="#E97070", width=25, command=abrir_borrar_cuenta).grid(row=1, column=0, padx=10, pady=5)
@@ -641,17 +641,17 @@ try:
 except:
     ttk.Label(root, text="[Logo]", font=("Segoe UI", 14)).pack(pady=10)
 
-ttk.Label(root, text="Inicio de sesión", font=("Segoe UI", 14, "bold")).pack(pady=5)
+tk.Label(root, text="Inicio de sesión", font=("Segoe UI", 14, "bold"),bg="white" ).pack(pady=5)
 
 # Campos de entrada
-frm_login = ttk.Frame(root, padding=12)
-frm_login.pack(pady=10)
+frm_login = tk.Frame(root, bg="white")
+frm_login.pack(pady=10, padx=12)
 
-ttk.Label(frm_login, text="Usuario:").grid(row=0, column=0, sticky="e", padx=6, pady=4)
+tk.Label(frm_login, text="Usuario:", bg="white").grid(row=0, column=0, sticky="e", padx=6, pady=4)
 entry_usuario = ttk.Entry(frm_login, width=25)
 entry_usuario.grid(row=0, column=1, pady=4)
 
-ttk.Label(frm_login, text="Contraseña:").grid(row=1, column=0, sticky="e", padx=6, pady=4)
+tk.Label(frm_login, text="Contraseña:", bg="white").grid(row=1, column=0, sticky="e", padx=6, pady=4)
 entry_contraseña = ttk.Entry(frm_login, show="*", width=25)
 entry_contraseña.grid(row=1, column=1, pady=4)
 
