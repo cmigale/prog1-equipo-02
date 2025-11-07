@@ -586,7 +586,7 @@ def abrir_menu(usuario, root):
               bg="#6c63ff", fg="white",font=("Segoe UI", 11, "bold"), command=lambda: abrir_clientes(menu)).grid(row=1, column=1, padx=10, pady=10)
 
     tk.Button(frm_botones, text="Cerrar sesión", width=25, 
-              bg="#F71010",fg="white,font=("Segoe UI", 11, "bold"),
+              bg="#F71010",fg="white",font=("Segoe UI", 11, "bold"),
                command=lambda: cerrar_sesion(menu, root, entry_usuario, entry_contraseña)
                ).grid(row=2, column=1, padx=10, pady=10)
 
