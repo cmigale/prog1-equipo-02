@@ -465,6 +465,19 @@ def finalizar_venta(ventana, venta_actual, historial_ventas,
     # Venta exitosa:
     messagebox.showinfo("Venta Finalizada", "¡Venta completada con éxito!", parent=ventana)
     generar_ticket_final(ventana, venta_actual, total_base, total_final, monto, vuelto, mensaje_recargo, opcion_pago)
+    nueva_venta_dict = {
+                "id_venta": datetime.now().strftime("%Y%m%d%H%M%S") + str(random.randint(100, 999)),
+                "fecha_hora": datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
+                "productos": list(venta_actual),  # Copia
+                "total_base": total_base,
+                "total_final": total_final,
+                "metodo_pago": opcion_pago,
+                "monto_cliente": monto,
+                "vuelto": vuelto,
+                "detalle_modificador": mensaje_recargo.splitlines()[0]
+            }
+    historial_ventas.append(nueva_venta_dict)
+    guardar_datos("historial.json", historial_ventas)
     venta_actual.clear()
     guardar_datos("stock.json", stock)
     # --- CAMBIO ---
@@ -623,6 +636,142 @@ def abrir_nueva_venta(parent, stock, historial_ventas, buscar_producto, guardar_
         venta_actual, tree_venta,
         etiqueta_total_base, etiqueta_total_final, etiqueta_vuelto
     )
+#------------------Historial de ventas-----------------------
+def poblar_tabla_historial_simple(tabla, ventas):
+    # Limpia y llena la tabla con columnas básicas
+    tabla.delete(*tabla.get_children())
+    for v in ventas:
+        idv = v.get("id_venta", "")
+        fecha = v.get("fecha_hora", "")
+        total = v.get("total_final", 0.0)
+        metodo = v.get("metodo_pago", "")
+        items = len(v.get("productos", []))
+        tabla.insert("", "end", values=(idv, fecha, f"${total:.2f}", metodo, items))
+
+def ver_detalle_venta_simple(ventana, tabla):
+    seleccion = tabla.selection()
+    if not seleccion:
+        messagebox.showwarning("Aviso", "Seleccioná una venta.", parent=ventana)
+        return
+
+    fila_id = seleccion[0]
+    valores = tabla.item(fila_id, "values")
+    codigo = valores[0]
+
+    ventas = cargar_datos("historial.json", [])
+    venta = None
+    for v in ventas:
+        if str(v.get("id_venta", "")) == str(codigo):
+            venta = v
+            break
+
+    if not venta:
+        messagebox.showerror("Error", "No se encontró la venta.", parent=ventana)
+        return
+
+    lineas = []
+    for p in venta.get("productos", []):
+        nombre = p.get("producto", "")
+        cant = p.get("cantidad", 0)
+        precio = p.get("precio", 0.0)
+        sub = p.get("subtotal", cant * precio)
+        lineas.append(f"- {nombre} x{cant}  ${precio:.2f}  (Subt: ${sub:.2f})")
+
+    texto = (
+        f"Código: {venta.get('id_venta','')}\n"
+        f"Fecha: {venta.get('fecha_hora','')}\n"
+        f"Método: {venta.get('metodo_pago','')}\n"
+        f"Total: ${venta.get('total_final',0.0):.2f}\n\n"
+        "Productos:\n" + ("\n".join(lineas) if lineas else "(sin productos)")
+    )
+    messagebox.showinfo("Detalle de venta", texto, parent=ventana)
+
+def eliminar_venta_historial(ventana, tabla, poblar_func):
+    """Elimina la venta seleccionada del historial y actualiza el JSON."""
+    
+    seleccion = tabla.selection()
+    if not seleccion:
+        messagebox.showwarning("Aviso", "Seleccioná una venta para eliminar.", parent=ventana)
+        return
+
+    fila_id = seleccion[0]
+    valores = tabla.item(fila_id, "values")
+    codigo_a_eliminar = str(valores[0]) # El primer valor es el Código de Venta
+    confirmar = messagebox.askyesno(
+        "Confirmar Eliminación", 
+        f"¿Estás seguro de que deseas eliminar la venta con Código: {codigo_a_eliminar}?", 
+        parent=ventana
+    )
+
+    if not confirmar:
+        return
+    ventas = cargar_datos("historial.json", [])
+    ventas_actualizadas = [v for v in ventas if str(v.get("id_venta", "")) != codigo_a_eliminar]
+    
+    if len(ventas_actualizadas) == len(ventas):
+        messagebox.showerror("Error", "No se encontró la venta para eliminar.", parent=ventana)
+        return
+    guardar_datos("historial.json", ventas_actualizadas)
+    messagebox.showinfo("Éxito", f"Venta {codigo_a_eliminar} eliminada del historial.", parent=ventana)
+    poblar_func(tabla, ventas_actualizadas)
+
+
+def abrir_historial(ventana_padre):
+    ventas = cargar_datos("historial.json", [])
+
+    win = tk.Toplevel(ventana_padre)
+    win.title("CodeBridge - Historial de ventas")
+    centrar_ventana(win, 900, 480)
+
+    ttk.Label(win, text="🧾 Historial de ventas", font=("Segoe UI", 16, "bold")).pack(pady=10)
+
+    marco = ttk.Frame(win)
+    marco.pack(fill="both", expand=True, padx=20, pady=10)
+
+    scroll = ttk.Scrollbar(marco, orient="vertical")
+    tabla = ttk.Treeview(
+        marco,
+        columns=("Código", "Fecha", "Total", "Método", "Items"),
+        show="headings",
+        height=15,
+        yscrollcommand=scroll.set
+    )
+    scroll.config(command=tabla.yview)
+    scroll.pack(side="right", fill="y")
+    tabla.pack(fill="both", expand=True)
+
+    # Encabezados y columnas
+    tabla.heading("Código", text="Código")
+    tabla.heading("Fecha", text="Fecha")
+    tabla.heading("Total", text="Total")
+    tabla.heading("Método", text="Método")
+    tabla.heading("Items", text="Items")
+
+    tabla.column("Código", width=200, anchor="center")
+    tabla.column("Fecha", width=200, anchor="center")
+    tabla.column("Total", width=120, anchor="center")
+    tabla.column("Método", width=150, anchor="center")
+    tabla.column("Items", width=80, anchor="center")
+
+    # Botones
+    barra = ttk.Frame(win)
+    barra.pack(pady=8)
+
+    tk.Button(
+        barra, text="🔍 Ver detalle",
+        command=lambda: ver_detalle_venta_simple(win, tabla),
+        bg="#8EB2E9"
+    ).grid(row=0, column=1, padx=8)
+    tk.Button(
+        barra, text="🗑️ Eliminar Venta",
+        # Le pasamos la ventana, la tabla y la función de poblar para que pueda refrescar la lista
+        command=lambda: eliminar_venta_historial(win, tabla, poblar_tabla_historial_simple), 
+        bg="#FF6666", fg="white"
+    ).grid(row=0, column=2, padx=8)
+    # Carga inicial
+    poblar_tabla_historial_simple(tabla, ventas)
+
+
 
 # ---------------- SECCION CLIENTES ----------------
 
@@ -937,7 +1086,9 @@ def abrir_menu(usuario, root):
         command=lambda: abrir_nueva_venta(menu, stock, historial_ventas, buscar_producto, guardar_datos)
     ).grid(row=0, column=0, padx=10, pady=10)
     tk.Button(frm_botones, text="Historial", width=25,
-              bg="#8EB2E9").grid(row=0, column=1, padx=10, pady=10)
+          bg="#8EB2E9",
+          command=lambda: abrir_historial(menu)
+            ).grid(row=0, column=1, padx=10, pady=10)
     tk.Button(frm_botones, text="Stock", width=25,
               bg="#8EB2E9", command=lambda: abrir_stock(menu)).grid(row=1, column=0, padx=10, pady=10)
     tk.Button(frm_botones, text="Clientes", width=25,
