@@ -101,6 +101,7 @@ def guardar(name, quant, price, tree, stock, dlg):
 
     stock.append({"codigo": codigo, "producto": nombre, "cantidad": cantidad, "precio": precio})
     actualizar_tabla(tree)
+    guardar_datos("stock.json", stock) 
     messagebox.showinfo("Éxito", f"'{nombre}' agregado correctamente.")
     dlg.destroy()
 
@@ -163,6 +164,7 @@ def aplicar(v_busca , nuevo_nombre , nuevo_cant , nuevo_precio, tree, stock , dl
             return
 
     actualizar_tabla(tree)
+    guardar_datos("stock.json", stock) 
     messagebox.showinfo("Éxito", "Producto actualizado.")
     dlg.destroy()
 
@@ -258,7 +260,7 @@ def abrir_stock(parent):
     tk.Button(botones, text="🔎 Buscar producto", bg="#8EB2E9", command=lambda: ventanabusqueda(ventana, stock)).grid(row=0, column=2, padx=10)
     tk.Button(botones, text="❌ Eliminar producto", bg="#FC7F7F", command=lambda: eliminar_producto(tree,stock)).grid(row=0, column=3, padx=10)
 
-    actualizar_tabla()
+    actualizar_tabla(tree)
 
 
 # ---------------- FUNCIONES DE VERIFICACIÓN ----------------
