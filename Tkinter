@@ -7,9 +7,9 @@ usuarios = {
 }
 
 # ---------------- ADMIN: CREAR CUENTA ----------------
-def crear():
-    usuario = entry_usuario.get().strip() # saca lo que se haya escrito en el campo de usuario
-    contraseña = entry_contraseña.get().strip() # saca lo que se haya escrito en el campo de contraseña
+def crear(entry_usuario, entry_contraseña, ventana):
+    usuario = entry_usuario.get().strip()
+    contraseña = entry_contraseña.get().strip()
 
     if not usuario or not contraseña:
         messagebox.showerror("Error", "Complete todos los campos.")
@@ -43,13 +43,14 @@ def abrir_crear_cuenta():
     entry_usuario.grid(row=0, column=1, pady=4)
     entry_contraseña.grid(row=1, column=1, pady=4)
 
-    tk.Button(frm, text="Crear cuenta", command=crear,
+    tk.Button(frm, text="Crear cuenta",
+               command=lambda: crear(entry_usuario, entry_contraseña, ventana),
                bg="#8EB2E9", fg="white").grid(row=2, column=0, columnspan=2, pady=10)
 
 
 # ---------------- ADMIN: BORRAR CUENTA ----------------
 
-def borrar():
+def borrar(entry_usuario, ventana):
     usuario = entry_usuario.get().strip()
 
     if usuario not in usuarios:
@@ -80,4 +81,4 @@ def abrir_borrar_cuenta():
     entry_usuario = ttk.Entry(frm, width=25)
     entry_usuario.pack()
 
-    ttk.Button(frm, text="Borrar", command=borrar).pack(pady=10)
+    ttk.Button(frm, text="Borrar", command=lambda: borrar(entry_usuario, ventana)).pack(pady=10)
