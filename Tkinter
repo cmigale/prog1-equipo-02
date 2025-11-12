@@ -7,6 +7,23 @@ usuarios = {
 }
 
 # ---------------- ADMIN: CREAR CUENTA ----------------
+def crear():
+    usuario = entry_usuario.get().strip() # saca lo que se haya escrito en el campo de usuario
+    contraseña = entry_contraseña.get().strip() # saca lo que se haya escrito en el campo de contraseña
+
+    if not usuario or not contraseña:
+        messagebox.showerror("Error", "Complete todos los campos.")
+        return
+
+    if usuario in usuarios:
+        messagebox.showerror("Error", "El usuario ya existe.")
+        return
+
+    usuarios[usuario] = {"contraseña": contraseña, "permiso": "usuario"}
+    messagebox.showinfo("Éxito", f"Cuenta '{usuario}' creada.")
+    guardar_datos("usuarios.json", usuarios)
+    ventana.destroy()
+
 def abrir_crear_cuenta():
     ANCHO, ALTO = 320, 220
     ventana = tk.Toplevel()
@@ -26,28 +43,28 @@ def abrir_crear_cuenta():
     entry_usuario.grid(row=0, column=1, pady=4)
     entry_contraseña.grid(row=1, column=1, pady=4)
 
-    def crear():
-        usuario = entry_usuario.get().strip() # saca lo que se haya escrito en el campo de usuario
-        contraseña = entry_contraseña.get().strip() # saca lo que se haya escrito en el campo de contraseña
-
-        if not usuario or not contraseña:
-            messagebox.showerror("Error", "Complete todos los campos.")
-            return
-
-        if usuario in usuarios:
-            messagebox.showerror("Error", "El usuario ya existe.")
-            return
-
-        usuarios[usuario] = {"contraseña": contraseña, "permiso": "usuario"}
-        messagebox.showinfo("Éxito", f"Cuenta '{usuario}' creada.")
-        guardar_datos("usuarios.json", usuarios)
-        ventana.destroy()
-
     tk.Button(frm, text="Crear cuenta", command=crear,
                bg="#8EB2E9", fg="white").grid(row=2, column=0, columnspan=2, pady=10)
 
 
 # ---------------- ADMIN: BORRAR CUENTA ----------------
+
+def borrar():
+    usuario = entry_usuario.get().strip()
+
+    if usuario not in usuarios:
+        messagebox.showerror("Error", "Usuario no encontrado.")
+        return
+
+    if usuario == "admin":
+        messagebox.showerror("Error", "No se puede borrar al admin.")
+        return
+
+    usuarios.pop(usuario)
+    messagebox.showinfo("Éxito", f"Usuario '{usuario}' borrado.")
+    guardar_datos("usuarios.json", usuarios)
+    ventana.destroy()
+
 def abrir_borrar_cuenta():
     ventana = tk.Toplevel()
     ANCHO,ALTO=300,150
@@ -62,21 +79,5 @@ def abrir_borrar_cuenta():
     ttk.Label(frm, text="Usuario a borrar:").pack(pady=5)
     entry_usuario = ttk.Entry(frm, width=25)
     entry_usuario.pack()
-
-    def borrar():
-        usuario = entry_usuario.get().strip()
-
-        if usuario not in usuarios:
-            messagebox.showerror("Error", "Usuario no encontrado.")
-            return
-
-        if usuario == "admin":
-            messagebox.showerror("Error", "No se puede borrar al admin.")
-            return
-
-        usuarios.pop(usuario)
-        messagebox.showinfo("Éxito", f"Usuario '{usuario}' borrado.")
-        guardar_datos("usuarios.json", usuarios)
-        ventana.destroy()
 
     ttk.Button(frm, text="Borrar", command=borrar).pack(pady=10)
