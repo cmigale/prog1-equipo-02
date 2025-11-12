@@ -8,8 +8,8 @@ usuarios = {
 
 # ---------------- ADMIN: CREAR CUENTA ----------------
 def crear(entry_usuario, entry_contraseña, ventana):
-    usuario = entry_usuario.get().strip()
-    contraseña = entry_contraseña.get().strip()
+    usuario = entry_usuario.get().strip()  # saca lo que se haya escrito en el campo de usuario
+    contraseña = entry_contraseña.get().strip()  # saca lo que se haya escrito en el campo de contraseña
 
     if not usuario or not contraseña:
         messagebox.showerror("Error", "Complete todos los campos.")
@@ -30,7 +30,7 @@ def abrir_crear_cuenta():
     ventana.title("Crear cuenta")
     ventana.resizable(False, False)
     ventana.configure(bg="white")
-    centrar_ventana(ventana,ANCHO,ALTO)
+    centrar_ventana(ventana, ANCHO, ALTO)
 
     frm = ttk.Frame(ventana, padding=12)
     frm.pack(fill="both", expand=True)
@@ -44,8 +44,7 @@ def abrir_crear_cuenta():
     entry_contraseña.grid(row=1, column=1, pady=4)
 
     tk.Button(frm, text="Crear cuenta",
-               command=lambda: crear(entry_usuario, entry_contraseña, ventana),
-               bg="#8EB2E9", fg="white").grid(row=2, column=0, columnspan=2, pady=10)
+        command=lambda: crear(entry_usuario, entry_contraseña, ventana), bg="#8EB2E9", fg="white").grid(row=2, column=0, columnspan=2, pady=10)
 
 
 # ---------------- ADMIN: BORRAR CUENTA ----------------
@@ -68,7 +67,7 @@ def borrar(entry_usuario, ventana):
 
 def abrir_borrar_cuenta():
     ventana = tk.Toplevel()
-    ANCHO,ALTO=300,150
+    ANCHO, ALTO = 300, 150
     ventana.title("Borrar cuenta")
     ventana.configure(bg="white")
     ventana.resizable(False, False)
