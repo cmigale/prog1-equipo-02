@@ -1180,7 +1180,7 @@ entry_contraseña = ttk.Entry(frm_login, show="*", width=25)
 entry_contraseña.grid(row=1, column=1, pady=4)
 
 # Botón de inicio
-tk.Button(root, text="Iniciar sesión",bg="#6c63ff",
+tk.Button(root, text="Iniciar sesión",bg="#6c63ff",font=("Segoe UI", 10, "bold"),
           command=lambda: iniciar_sesion(root, entry_usuario, entry_contraseña),
           fg="white", width=20).pack(pady=15)
 
