@@ -1077,13 +1077,17 @@ def abrir_borrar_cuenta():
     ).pack(pady=10)
 
 # ---------------- MENÚ PRINCIPAL ----------------
+def volver_login(menu, root):
+    menu.destroy()      # Cierra la ventana del menú principal
+    root.deiconify()    
+
 def abrir_menu(usuario, root):
     permiso = usuarios[usuario]["permiso"]
 
     menu = tk.Toplevel(root)
     menu.title("Menú principal")
     menu.configure(bg="white")
-    ALTO,ANCHO=500,550
+    ALTO, ANCHO = 500, 550
     menu.resizable(False, False)
     centrar_ventana(menu, ANCHO, ALTO)
 
@@ -1095,8 +1099,7 @@ def abrir_menu(usuario, root):
         tk.Label(menu, image=logo, bg="white").pack(pady=10)
         menu.logo = logo
     except:
-        tk.Label(menu, text="[Logo]", font=("Segoe UI", 14),
-                 bg="white").pack(pady=10)
+        tk.Label(menu, text="[Logo]", font=("Segoe UI", 14), bg="white").pack(pady=10)
 
     # Botones principales
     frm_botones = tk.Frame(menu, bg="white")
@@ -1107,18 +1110,30 @@ def abrir_menu(usuario, root):
         font=("Segoe UI", 11, "bold"),
         command=lambda: abrir_nueva_venta(menu, stock, historial_ventas, buscar_producto, guardar_datos)
     ).grid(row=0, column=0, padx=10, pady=10)
-    tk.Button(frm_botones, text="Historial", width=25,
-          bg="#6c63ff", fg="white",font=("Segoe UI", 11, "bold"),
-          command=lambda: abrir_historial(menu)
-            ).grid(row=0, column=1, padx=10, pady=10)
-    tk.Button(frm_botones, text="Stock", width=25, bg="#6c63ff", fg="white",font=("Segoe UI", 11, "bold"), command=lambda: abrir_stock(menu)).grid(row=1, column=0, padx=10, pady=10)
-    tk.Button(frm_botones, text="Clientes", width=25,
-              bg="#6c63ff", fg="white",font=("Segoe UI", 11, "bold"), command=lambda: abrir_clientes(menu)).grid(row=1, column=1, padx=10, pady=10)
 
-    tk.Button(frm_botones, text="Cerrar sesión", width=25, 
-              bg="#F71010",fg="white",font=("Segoe UI", 11, "bold"),
-               command=lambda: cerrar_sesion(menu, root, entry_usuario, entry_contraseña)
-               ).grid(row=2, columnspan=2, padx=10, pady=10)
+    tk.Button(
+        frm_botones, text="Historial", width=25, bg="#6c63ff", fg="white",
+        font=("Segoe UI", 11, "bold"),
+        command=lambda: abrir_historial(menu)
+    ).grid(row=0, column=1, padx=10, pady=10)
+
+    tk.Button(
+        frm_botones, text="Stock", width=25, bg="#6c63ff", fg="white",
+        font=("Segoe UI", 11, "bold"),
+        command=lambda: abrir_stock(menu)
+    ).grid(row=1, column=0, padx=10, pady=10)
+
+    tk.Button(
+        frm_botones, text="Clientes", width=25, bg="#6c63ff", fg="white",
+        font=("Segoe UI", 11, "bold"),
+        command=lambda: abrir_clientes(menu)
+    ).grid(row=1, column=1, padx=10, pady=10)
+
+    tk.Button(
+        frm_botones, text="Cerrar sesión", width=25,
+        bg="#F71010", fg="white", font=("Segoe UI", 11, "bold"),
+        command=lambda: cerrar_sesion(menu, root, entry_usuario, entry_contraseña)
+    ).grid(row=2, columnspan=2, padx=10, pady=10)
 
     # Opciones de administrador
     if permiso == "admin":
@@ -1127,15 +1142,18 @@ def abrir_menu(usuario, root):
         frm_admin = tk.Frame(menu, bg="white")
         frm_admin.pack(padx=10, pady=10)
 
-        tk.Button(frm_admin, text="👤 Crear cuenta", bg="#5CCB2C", width=25,font=("Segoe UI", 10, "bold"), command=abrir_crear_cuenta).grid(row=0, column=0, padx=10, pady=5)
-        tk.Button(frm_admin, text="❌ Borrar cuenta", bg="#F71010", width=25,font=("Segoe UI", 10, "bold"), command=abrir_borrar_cuenta).grid(row=1, column=0, padx=10, pady=5)
+        tk.Button(
+            frm_admin, text="👤 Crear cuenta", bg="#5CCB2C", width=25, font=("Segoe UI", 10, "bold"),
+            command=abrir_crear_cuenta
+        ).grid(row=0, column=0, padx=10, pady=5)
+
+        tk.Button(
+            frm_admin, text="❌ Borrar cuenta", bg="#F71010", width=25, font=("Segoe UI", 10, "bold"),
+            command=abrir_borrar_cuenta
+        ).grid(row=1, column=0, padx=10, pady=5)
 
     # Al cerrar la ventana
-    def volver_login():
-        menu.destroy()
-        root.deiconify()
-
-    menu.protocol("WM_DELETE_WINDOW", volver_login)
+    menu.protocol("WM_DELETE_WINDOW", lambda: volver_login(menu, root))
 
 # ---------------- LOGIN ----------------
 def iniciar_sesion(root, entry_usuario, entry_contraseña):
