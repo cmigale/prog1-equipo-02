@@ -96,10 +96,17 @@ def guardar(name, quant, price, tree, stock, dlg):
     if not nombre:
         messagebox.showerror("Error", "El nombre no puede estar vacío.")
         return
-
+    if buscar_producto(nombre) is not None:
+        messagebox.showerror("Error", "El producto ya se encuentra en stock")
+        return
     codigo = random.randint(100000, 999999)
-    while any(p["codigo"] == codigo for p in stock):
-        codigo = random.randint(100000, 999999)
+    repetido = True
+    while repetido:
+        repetido = False  
+        for p in stock:
+            if p["codigo"] == codigo:
+                repetido = True          
+                codigo = random.randint(100000, 999999)  
 
     stock.append({"codigo": codigo, "producto": nombre, "cantidad": cantidad, "precio": precio})
     actualizar_tabla(tree)
@@ -216,6 +223,7 @@ def eliminar_producto(tree, stock):
         stockfiltrado = [p for p in stock if p["codigo"] != codigo]
         stock[:] = stockfiltrado
         actualizar_tabla(tree)
+        guardar_datos("stock.json", stock)
         messagebox.showinfo("Éxito", "Producto eliminado correctamente.")
 
 
@@ -284,7 +292,7 @@ def actualizar_venta_treeview(venta_actual, tree_venta,
  
    
     etiqueta_total_base.config(text=f"Total Base: ${total:,.2f}")
-    etiqueta_total_final.config(text=f"TOTAL FINAL: ${total:,.2f}")  # Reinicia el final
+    etiqueta_total_final.config(text=f"TOTAL FINAL: ${total:,.2f}")  
     etiqueta_vuelto.config(text=f"Vuelto: $0.00")
  
     return total
@@ -301,7 +309,7 @@ def agregar_producto_a_venta(entrada_busqueda, ventana, venta_actual,
  
     producto_stock = buscar_producto(entrada)
  
-    if producto_stock=="":
+    if producto_stock is None:
         messagebox.showerror("Error", "Producto no encontrado.", parent=ventana)
         return
  
@@ -335,7 +343,6 @@ def agregar_producto_a_venta(entrada_busqueda, ventana, venta_actual,
  
         messagebox.showinfo("Éxito", f"{producto_stock['producto']} agregado con subtotal ${subtotal:.2f}", parent=ventana)
  
-        # Actualizar la interfaz (llamando a la nueva función)
         actualizar_venta_treeview(venta_actual, tree_venta, etiqueta_total_base, etiqueta_total_final, etiqueta_vuelto)
         entrada_busqueda.delete(0, tk.END)  # Limpiar campo de búsqueda
  
@@ -346,7 +353,7 @@ def eliminar_producto_de_venta(ventana, venta_actual, tree_venta, stock, buscar_
                              etiqueta_total_base, etiqueta_total_final, etiqueta_vuelto):
    
     seleccion = tree_venta.selection()
-    if seleccion=="":
+    if not seleccion:
         messagebox.showerror("Error", "Seleccione un producto de la venta para eliminar.", parent=ventana)
         return
  
@@ -365,8 +372,6 @@ def eliminar_producto_de_venta(ventana, venta_actual, tree_venta, stock, buscar_
             messagebox.showinfo("Éxito", f"{borrado['producto']} eliminado y stock restaurado.", parent=ventana)
  
            
- 
-            # Actualizar la interfaz (llamando a la nueva función)
             actualizar_venta_treeview(venta_actual, tree_venta, etiqueta_total_base, etiqueta_total_final, etiqueta_vuelto)
         else:
             messagebox.showerror("Error", "Error al encontrar el producto para eliminar.", parent=ventana)
@@ -458,7 +463,6 @@ def finalizar_venta(ventana, venta_actual, historial_ventas,
             return # Detiene la función si el ingreso es inválido
    
     else:
-        # Si NO es efectivo (Tarjeta, Débito, Billetera), el monto entregado es igual al total final y el vuelto es cero.
         monto = total_final
         vuelto = 0.0
         etiqueta_vuelto.config(text=f"Vuelto: $0.00")
@@ -480,7 +484,6 @@ def finalizar_venta(ventana, venta_actual, historial_ventas,
     guardar_datos("historial.json", historial_ventas)
     venta_actual.clear()
     guardar_datos("stock.json", stock)
-    # --- CAMBIO ---
     actualizar_venta_treeview(venta_actual, tree_venta, etiqueta_total_base, etiqueta_total_final, etiqueta_vuelto)
     etiqueta_total_base.config(text="Total Base: $0.00")
  
@@ -488,8 +491,12 @@ def generar_ticket_final(ventana, venta_actual, total_base, total_final,
                          monto_cliente, vuelto, detalle_recargo, detalle_pago_tipo):
  
     fecha = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-    descuento = total_base - total_final if total_base > total_final else 0
-    recargo = total_final - total_base if total_final > total_base else 0
+    descuento=0
+    recargo=0 
+    if total_base > total_final: 
+        descuento = total_base - total_final
+    elif total_final > total_base: 
+        recargo = total_final - total_base
  
     ticket_texto = "===================================\n"
     ticket_texto += "        TICKET DE COMPRA         \n"
@@ -665,7 +672,6 @@ def ver_detalle_venta_simple(ventana, tabla):
     for v in ventas:
         if str(v.get("id_venta", "")) == str(codigo):
             venta = v
-            break
 
     if not venta:
         messagebox.showerror("Error", "No se encontró la venta.", parent=ventana)
@@ -684,7 +690,7 @@ def ver_detalle_venta_simple(ventana, tabla):
         f"Fecha: {venta.get('fecha_hora','')}\n"
         f"Método: {venta.get('metodo_pago','')}\n"
         f"Total: ${venta.get('total_final',0.0):.2f}\n\n"
-        "Productos:\n" + ("\n".join(lineas) if lineas else "(sin productos)")
+        "Productos:\n" + "\n".join(lineas)
     )
     messagebox.showinfo("Detalle de venta", texto, parent=ventana)
 
@@ -1024,7 +1030,7 @@ def abrir_crear_cuenta():
         frm,
         text="Crear cuenta",
         command=lambda: crear(entry_usuario_local, entry_contraseña_local, ventana),
-        bg="#8EB2E9",
+        bg="#6c63ff",
         fg="white",
         width=20
     ).grid(row=2, column=0, columnspan=2, pady=10)
@@ -1064,7 +1070,7 @@ def abrir_borrar_cuenta():
         frm,
         text="Borrar cuenta",
         command=lambda: borrar(entry_usuario_local, ventana),
-        bg="#E98E8E",
+        bg="#F71010",
         fg="white",
         relief="flat",
         width=20
