@@ -669,7 +669,6 @@ def ver_detalle_venta_simple(ventana, tabla):
     for v in ventas:
         if str(v.get("id_venta", "")) == str(codigo):
             venta = v
-            break
 
     if not venta:
         messagebox.showerror("Error", "No se encontró la venta.", parent=ventana)
@@ -688,7 +687,7 @@ def ver_detalle_venta_simple(ventana, tabla):
         f"Fecha: {venta.get('fecha_hora','')}\n"
         f"Método: {venta.get('metodo_pago','')}\n"
         f"Total: ${venta.get('total_final',0.0):.2f}\n\n"
-        "Productos:\n" + ("\n".join(lineas) if lineas else "(sin productos)")
+        "Productos:\n" + "\n".join(lineas)
     )
     messagebox.showinfo("Detalle de venta", texto, parent=ventana)
 
@@ -1028,7 +1027,7 @@ def abrir_crear_cuenta():
         frm,
         text="Crear cuenta",
         command=lambda: crear(entry_usuario_local, entry_contraseña_local, ventana),
-        bg="#8EB2E9",
+        bg="#6c63ff",
         fg="white",
         width=20
     ).grid(row=2, column=0, columnspan=2, pady=10)
@@ -1068,7 +1067,7 @@ def abrir_borrar_cuenta():
         frm,
         text="Borrar cuenta",
         command=lambda: borrar(entry_usuario_local, ventana),
-        bg="#E98E8E",
+        bg="#F71010",
         fg="white",
         relief="flat",
         width=20
