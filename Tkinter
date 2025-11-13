@@ -260,7 +260,7 @@ def abrir_stock(parent):
     tk.Button(botones, text="➕ Añadir producto", bg="#6c63ff", command=lambda: agregar_producto(ventana, tree, stock)).grid(row=0, column=0, padx=10)
     tk.Button(botones, text="✏️ Editar producto", bg="#6c63ff", command=lambda: editar_producto(ventana, tree, stock)).grid(row=0, column=1, padx=10)
     tk.Button(botones, text="🔎 Buscar producto", bg="#6c63ff", command=lambda: ventanabusqueda(ventana, stock)).grid(row=0, column=2, padx=10)
-    tk.Button(botones, text="❌ Eliminar producto", bg="#E97070", command=lambda: eliminar_producto(tree,stock)).grid(row=0, column=3, padx=10)
+    tk.Button(botones, text="❌ Eliminar producto", bg="#F71010", command=lambda: eliminar_producto(tree,stock)).grid(row=0, column=3, padx=10)
 
     actualizar_tabla(tree)
 
@@ -1182,6 +1182,6 @@ entry_contraseña.grid(row=1, column=1, pady=4)
 # Botón de inicio
 tk.Button(root, text="Iniciar sesión",bg="#6c63ff",
           command=lambda: iniciar_sesion(root, entry_usuario, entry_contraseña),
-          bg="#6498E7", fg="white", width=20).pack(pady=15)
+          fg="white", width=20).pack(pady=15)
 
 root.mainloop()
