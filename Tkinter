@@ -401,7 +401,7 @@ def finalizar_venta(ventana, venta_actual, historial_ventas,
             porcentaje=f.read().strip()
             descuento = total_base* float(porcentaje)
             total_final = total_base - descuento
-            mensaje_recargo = f"Descuento efectivo (10%): -${descuento:.2f}"
+            mensaje_recargo = f"Descuento efectivo ({float(porcentaje)*100:.0f}%): -${descuento:.2f}"
         except FileNotFoundError:
             mensaje_error="Error, comuniquese con soporte"
         f.close()
