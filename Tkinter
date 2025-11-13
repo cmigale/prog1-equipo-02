@@ -257,10 +257,10 @@ def abrir_stock(parent):
     botones = ttk.Frame(ventana)
     botones.pack(pady=10)
 
-    tk.Button(botones, text="➕ Añadir producto", bg="#8EB2E9", command=lambda: agregar_producto(ventana, tree, stock)).grid(row=0, column=0, padx=10)
-    tk.Button(botones, text="✏️ Editar producto", bg="#8EB2E9", command=lambda: editar_producto(ventana, tree, stock)).grid(row=0, column=1, padx=10)
-    tk.Button(botones, text="🔎 Buscar producto", bg="#8EB2E9", command=lambda: ventanabusqueda(ventana, stock)).grid(row=0, column=2, padx=10)
-    tk.Button(botones, text="❌ Eliminar producto", bg="#FC7F7F", command=lambda: eliminar_producto(tree,stock)).grid(row=0, column=3, padx=10)
+    tk.Button(botones, text="➕ Añadir producto", bg="#6c63ff", command=lambda: agregar_producto(ventana, tree, stock)).grid(row=0, column=0, padx=10)
+    tk.Button(botones, text="✏️ Editar producto", bg="#6c63ff", command=lambda: editar_producto(ventana, tree, stock)).grid(row=0, column=1, padx=10)
+    tk.Button(botones, text="🔎 Buscar producto", bg="#6c63ff", command=lambda: ventanabusqueda(ventana, stock)).grid(row=0, column=2, padx=10)
+    tk.Button(botones, text="❌ Eliminar producto", bg="#F71010", command=lambda: eliminar_producto(tree,stock)).grid(row=0, column=3, padx=10)
 
     actualizar_tabla(tree)
 
@@ -546,7 +546,9 @@ def abrir_nueva_venta(parent, stock, historial_ventas, buscar_producto, guardar_
  
     ventana = tk.Toplevel(parent)
     ventana.title("Sistema de Venta (CodeBridge)")
-    ventana.geometry("550x550")  # Geometría adaptada al Treeview
+    ALTO,ANCHO=550,550
+    ventana.resizable(False, False)
+    centrar_ventana(ventana, ANCHO, ALTO)
     ventana.transient(parent)
     ventana.grab_set()
  
@@ -760,13 +762,13 @@ def abrir_historial(ventana_padre):
     tk.Button(
         barra, text="🔍 Ver detalle",
         command=lambda: ver_detalle_venta_simple(win, tabla),
-        bg="#8EB2E9"
+        bg="#6c63ff"
     ).grid(row=0, column=1, padx=8)
     tk.Button(
         barra, text="🗑️ Eliminar Venta",
         # Le pasamos la ventana, la tabla y la función de poblar para que pueda refrescar la lista
         command=lambda: eliminar_venta_historial(win, tabla, poblar_tabla_historial_simple), 
-        bg="#FF6666", fg="white"
+        bg="#F71010", fg="white"
     ).grid(row=0, column=2, padx=8)
     # Carga inicial
     poblar_tabla_historial_simple(tabla, ventas)
@@ -815,7 +817,7 @@ def registrar_cliente_confirmar(dlg, nombre, v_dni, v_tel, v_mail, tree):
 def registrar_cliente_gui(ventana, nombre, tree):
     dlg = tk.Toplevel(ventana)
     dlg.title("Registrar cliente")
-    dlg.geometry("380x260")
+    centrar_ventana(dlg,380,260)
     dlg.resizable(False, False)
     dlg.transient(ventana)
     dlg.grab_set()
@@ -869,7 +871,7 @@ def continuar_busqueda(ventana, dlg, entry_nom, tree):
 def buscar_o_crear_cliente(ventana, tree):
     dlg = tk.Toplevel(ventana)
     dlg.title("Buscar / Crear cliente")
-    dlg.geometry("380x180")
+    centrar_ventana(dlg,380,180)
     dlg.resizable(False, False)
     dlg.transient(ventana)
     dlg.grab_set()
@@ -912,7 +914,8 @@ def eliminar_cliente(tree):
 def abrir_clientes(parent):
     ventana = tk.Toplevel(parent)
     ventana.title("CodeBridge - Clientes")
-    ventana.geometry("900x520")
+    ventana.resizable(False, False) 
+    centrar_ventana(ventana,900,520)
 
     ttk.Label(ventana, text="👤 Clientes", font=("Segoe UI", 16, "bold")).pack(pady=10)
 
@@ -945,17 +948,17 @@ def abrir_clientes(parent):
     botones.pack(pady=10)
 
     tk.Button(
-        botones, text="🔎 Buscar / Crear", bg="#8EB2E9",
+        botones, text="🔎 Buscar / Crear", bg="#6c63ff",
         command=lambda: buscar_o_crear_cliente(ventana, tree)
     ).grid(row=0, column=0, padx=10)
 
     tk.Button(
-        botones, text="📋 Mostrar todos", bg="#8EB2E9",
+        botones, text="📋 Mostrar todos", bg="#6c63ff",
         command=lambda: mostrar_todos_clientes(tree)
     ).grid(row=0, column=1, padx=10)
 
     tk.Button(
-        botones, text="❌ Eliminar", bg="#FC7F7F",
+        botones, text="❌ Eliminar", bg="#F71010",
         command=lambda: eliminar_cliente(tree)
     ).grid(row=0, column=2, padx=10)
 
@@ -1078,7 +1081,7 @@ def abrir_menu(usuario, root):
     menu.resizable(False, False)
     centrar_ventana(menu, ANCHO, ALTO)
 
-    ttk.Label(menu, text="CodeBridge - Sistema de ventas", font=("Segoe UI", 20, "bold")).pack(pady=10)
+    tk.Label(menu, text="CodeBridge - Sistema de ventas", font=("Segoe UI", 20, "bold"), bg="white").pack(pady=10)
 
     # Logo
     try:
@@ -1090,8 +1093,8 @@ def abrir_menu(usuario, root):
                  bg="white").pack(pady=10)
 
     # Botones principales
-    frm_botones = ttk.Frame(menu, padding=10)
-    frm_botones.pack(pady=15)
+    frm_botones = tk.Frame(menu, bg="white")
+    frm_botones.pack(padx=10, pady=15)
 
     tk.Button(
         frm_botones, text="Nueva venta", width=25, bg="#6c63ff", fg="white",
@@ -1099,28 +1102,27 @@ def abrir_menu(usuario, root):
         command=lambda: abrir_nueva_venta(menu, stock, historial_ventas, buscar_producto, guardar_datos)
     ).grid(row=0, column=0, padx=10, pady=10)
     tk.Button(frm_botones, text="Historial", width=25,
-          bg="#8EB2E9",
+          bg="#6c63ff", fg="white",font=("Segoe UI", 11, "bold"),
           command=lambda: abrir_historial(menu)
             ).grid(row=0, column=1, padx=10, pady=10)
-    tk.Button(frm_botones, text="Stock", width=25,
-              bg="#8EB2E9", command=lambda: abrir_stock(menu)).grid(row=1, column=0, padx=10, pady=10)
+    tk.Button(frm_botones, text="Stock", width=25, bg="#6c63ff", fg="white",font=("Segoe UI", 11, "bold"), command=lambda: abrir_stock(menu)).grid(row=1, column=0, padx=10, pady=10)
     tk.Button(frm_botones, text="Clientes", width=25,
-              bg="#8EB2E9", command=lambda: abrir_clientes(menu)).grid(row=1, column=1, padx=10, pady=10)
+              bg="#6c63ff", fg="white",font=("Segoe UI", 11, "bold"), command=lambda: abrir_clientes(menu)).grid(row=1, column=1, padx=10, pady=10)
 
     tk.Button(frm_botones, text="Cerrar sesión", width=25, 
-              bg="#FC7F7F",
+              bg="#F71010",fg="white",font=("Segoe UI", 11, "bold"),
                command=lambda: cerrar_sesion(menu, root, entry_usuario, entry_contraseña)
-               ).grid(row=2, column=1, padx=10, pady=10)
+               ).grid(row=2, columnspan=2, padx=10, pady=10)
 
     # Opciones de administrador
     if permiso == "admin":
         ttk.Separator(menu, orient="horizontal").pack(fill="x", pady=10)
-        ttk.Label(menu, text="Opciones de administrador", font=("Segoe UI", 10, "bold")).pack(pady=5)
-        frm_admin = ttk.Frame(menu, padding=10)
-        frm_admin.pack()
+        tk.Label(menu, text="Opciones de administrador", font=("Segoe UI", 10, "bold"), bg="white").pack(pady=5)
+        frm_admin = tk.Frame(menu, bg="white")
+        frm_admin.pack(padx=10, pady=10)
 
-        tk.Button(frm_admin, text="👤 Crear cuenta", bg="#B0E29B", width=25, command=abrir_crear_cuenta).grid(row=0, column=0, padx=10, pady=5)
-        tk.Button(frm_admin, text="❌ Borrar cuenta", bg="#E97070", width=25, command=abrir_borrar_cuenta).grid(row=1, column=0, padx=10, pady=5)
+        tk.Button(frm_admin, text="👤 Crear cuenta", bg="#5CCB2C", width=25,font=("Segoe UI", 10, "bold"), command=abrir_crear_cuenta).grid(row=0, column=0, padx=10, pady=5)
+        tk.Button(frm_admin, text="❌ Borrar cuenta", bg="#F71010", width=25,font=("Segoe UI", 10, "bold"), command=abrir_borrar_cuenta).grid(row=1, column=0, padx=10, pady=5)
 
     # Al cerrar la ventana
     def volver_login():
@@ -1163,23 +1165,23 @@ try:
 except:
     ttk.Label(root, text="[Logo]", font=("Segoe UI", 14)).pack(pady=10)
 
-ttk.Label(root, text="Inicio de sesión", font=("Segoe UI", 14, "bold")).pack(pady=5)
+tk.Label(root, text="Inicio de sesión", font=("Segoe UI", 14, "bold"), bg="white").pack(pady=5)
 
 # Campos de entrada
-frm_login = ttk.Frame(root, padding=12)
+frm_login = tk.Frame(root, bg="white", padx=12, pady=12) 
 frm_login.pack(pady=10)
 
-ttk.Label(frm_login, text="Usuario:").grid(row=0, column=0, sticky="e", padx=6, pady=4)
+tk.Label(frm_login, text="Usuario:", bg="white").grid(row=0, column=0, sticky="e", padx=6, pady=4)
 entry_usuario = ttk.Entry(frm_login, width=25)
 entry_usuario.grid(row=0, column=1, pady=4)
 
-ttk.Label(frm_login, text="Contraseña:").grid(row=1, column=0, sticky="e", padx=6, pady=4)
+tk.Label(frm_login, text="Contraseña:", bg="white").grid(row=1, column=0, sticky="e", padx=6, pady=4) 
 entry_contraseña = ttk.Entry(frm_login, show="*", width=25)
 entry_contraseña.grid(row=1, column=1, pady=4)
 
 # Botón de inicio
-tk.Button(root, text="Iniciar sesión",
+tk.Button(root, text="Iniciar sesión",bg="#6c63ff",font=("Segoe UI", 10, "bold"),
           command=lambda: iniciar_sesion(root, entry_usuario, entry_contraseña),
-          bg="#6498E7", fg="white", width=20).pack(pady=15)
+          fg="white", width=20).pack(pady=15)
 
 root.mainloop()
