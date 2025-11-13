@@ -402,9 +402,9 @@ def finalizar_venta(ventana, venta_actual, historial_ventas,
             descuento = total_base* float(porcentaje)
             total_final = total_base - descuento
             mensaje_recargo = f"Descuento efectivo ({float(porcentaje)*100:.0f}%): -${descuento:.2f}"
+            f.close()
         except FileNotFoundError:
             mensaje_error="Error, comuniquese con soporte"
-        f.close()
  
     elif opcion_pago == "Billetera virtual" :
         descuento = total_base * 0.10
