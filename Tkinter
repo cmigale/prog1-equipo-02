@@ -96,7 +96,9 @@ def guardar(name, quant, price, tree, stock, dlg):
     if not nombre:
         messagebox.showerror("Error", "El nombre no puede estar vacío.")
         return
-
+    if buscar_producto(nombre) is not None:
+        messagebox.showerror("Error", "El producto ya se encuentra en stock")
+        return
     codigo = random.randint(100000, 999999)
     repetido = True
     while repetido:
@@ -221,6 +223,7 @@ def eliminar_producto(tree, stock):
         stockfiltrado = [p for p in stock if p["codigo"] != codigo]
         stock[:] = stockfiltrado
         actualizar_tabla(tree)
+        guardar_datos("stock.json", stock)
         messagebox.showinfo("Éxito", "Producto eliminado correctamente.")
 
 
