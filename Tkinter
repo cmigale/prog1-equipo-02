@@ -281,8 +281,8 @@ def actualizar_venta_treeview(venta_actual, tree_venta,
     for i in tree_venta.get_children():
         tree_venta.delete(i)
  
-    for i, p in enumerate(venta_actual, start=1):
-        tree_venta.insert("", "end", text=str(i), values=(
+    for p in venta_actual:
+        tree_venta.insert("", "end", values=(
             p["codigo"],
             p["producto"],
             p["cantidad"],
