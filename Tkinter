@@ -478,7 +478,6 @@ def finalizar_venta(ventana, venta_actual, historial_ventas,
                 "metodo_pago": opcion_pago,
                 "monto_cliente": monto,
                 "vuelto": vuelto,
-                "detalle_modificador": mensaje_recargo.splitlines()[0]
             }
     historial_ventas.append(nueva_venta_dict)
     guardar_datos("historial.json", historial_ventas)
