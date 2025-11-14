@@ -385,7 +385,6 @@ def finalizar_venta(ventana, venta_actual, historial_ventas,
  
     # Lógica de pago original (descuentos/recargos)
     if opcion_pago == "Efectivo":
-        d=0
         try:
             f=open("descuento_efectivo.txt","r")
             porcentaje=f.read().strip()
