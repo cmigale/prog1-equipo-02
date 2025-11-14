@@ -360,21 +360,11 @@ def eliminar_producto_de_venta(ventana, venta_actual, tree_venta, stock, buscar_
     try:
         item_id = seleccion[0]
         index_a_eliminar = tree_venta.index(item_id)
- 
-        if 0 <= index_a_eliminar < len(venta_actual):
-            borrado = venta_actual.pop(index_a_eliminar)
- 
-            # Actualizar stock (buscar el producto por código)
-            producto_stock = buscar_producto(borrado["codigo"])
-            if producto_stock:
-                producto_stock["cantidad"] += borrado["cantidad"]
- 
-            messagebox.showinfo("Éxito", f"{borrado['producto']} eliminado y stock restaurado.", parent=ventana)
- 
-           
-            actualizar_venta_treeview(venta_actual, tree_venta, etiqueta_total_base, etiqueta_total_final, etiqueta_vuelto)
-        else:
-            messagebox.showerror("Error", "Error al encontrar el producto para eliminar.", parent=ventana)
+        borrado = venta_actual.pop(index_a_eliminar)
+        producto_stock = buscar_producto(borrado["codigo"])
+        producto_stock["cantidad"] += borrado["cantidad"]
+        messagebox.showinfo("Éxito", f"{borrado['producto']} eliminado y stock restaurado.", parent=ventana)
+        actualizar_venta_treeview(venta_actual, tree_venta, etiqueta_total_base, etiqueta_total_final, etiqueta_vuelto)
     except IndexError:
         messagebox.showerror("Error", "Error al seleccionar. Intente de nuevo.", parent=ventana)
 def finalizar_venta(ventana, venta_actual, historial_ventas,
