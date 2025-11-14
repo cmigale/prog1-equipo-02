@@ -281,8 +281,8 @@ def actualizar_venta_treeview(venta_actual, tree_venta,
     for i in tree_venta.get_children():
         tree_venta.delete(i)
  
-    for i, p in enumerate(venta_actual, start=1):
-        tree_venta.insert("", "end", text=str(i), values=(
+    for p in venta_actual:
+        tree_venta.insert("", "end", values=(
             p["codigo"],
             p["producto"],
             p["cantidad"],
@@ -360,21 +360,11 @@ def eliminar_producto_de_venta(ventana, venta_actual, tree_venta, stock, buscar_
     try:
         item_id = seleccion[0]
         index_a_eliminar = tree_venta.index(item_id)
- 
-        if 0 <= index_a_eliminar < len(venta_actual):
-            borrado = venta_actual.pop(index_a_eliminar)
- 
-            # Actualizar stock (buscar el producto por código)
-            producto_stock = buscar_producto(borrado["codigo"])
-            if producto_stock:
-                producto_stock["cantidad"] += borrado["cantidad"]
- 
-            messagebox.showinfo("Éxito", f"{borrado['producto']} eliminado y stock restaurado.", parent=ventana)
- 
-           
-            actualizar_venta_treeview(venta_actual, tree_venta, etiqueta_total_base, etiqueta_total_final, etiqueta_vuelto)
-        else:
-            messagebox.showerror("Error", "Error al encontrar el producto para eliminar.", parent=ventana)
+        borrado = venta_actual.pop(index_a_eliminar)
+        producto_stock = buscar_producto(borrado["codigo"])
+        producto_stock["cantidad"] += borrado["cantidad"]
+        messagebox.showinfo("Éxito", f"{borrado['producto']} eliminado y stock restaurado.", parent=ventana)
+        actualizar_venta_treeview(venta_actual, tree_venta, etiqueta_total_base, etiqueta_total_final, etiqueta_vuelto)
     except IndexError:
         messagebox.showerror("Error", "Error al seleccionar. Intente de nuevo.", parent=ventana)
 def finalizar_venta(ventana, venta_actual, historial_ventas,
@@ -478,7 +468,6 @@ def finalizar_venta(ventana, venta_actual, historial_ventas,
                 "metodo_pago": opcion_pago,
                 "monto_cliente": monto,
                 "vuelto": vuelto,
-                "detalle_modificador": mensaje_recargo.splitlines()[0]
             }
     historial_ventas.append(nueva_venta_dict)
     guardar_datos("historial.json", historial_ventas)
