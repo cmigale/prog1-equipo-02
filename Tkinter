@@ -529,7 +529,43 @@ def generar_ticket_final(ventana, venta_actual, total_base, total_final,
     caja_ticket_popup.config(state=tk.DISABLED)
  
     ttk.Button(ventana_popup, text="Cerrar", command=ventana_popup.destroy).pack(pady=(0, 10))
- 
+
+def modificar_cantidad_venta (ventana, venta_actual, tree_venta, stock, buscar_producto,guardar_datos,
+                               etiqueta_total_base, etiqueta_total_final, etiqueta_vuelto): 
+    
+    seleccion= tree_venta.selection()
+
+    if not seleccion:
+        messagebox.showerror("Error", "Seleccione el producto del cual quiere modificar la cantidad.", parent=ventana)
+        return
+    item_id = seleccion[0]
+    valores = tree_venta.item(item_id, 'values')
+    codigo, nombre, cantidad_actual, precio_unit, subtotal = valores
+    nueva_cantidad = simpledialog.askinteger(
+    "Cantidad", 
+    f"Ingrese la nueva cantidad para {nombre} (actual: {cantidad_actual}):",
+    parent=ventana,
+    minvalue=1
+    )
+    producto_stock = buscar_producto(codigo)
+    if nueva_cantidad is None:
+        return
+
+    if nueva_cantidad == int(cantidad_actual):
+        return
+        
+    if nueva_cantidad>(producto_stock["cantidad"]+ int(cantidad_actual)):
+        messagebox.showerror("Error", f"Stock insuficiente. Disponible: {producto_stock['cantidad'] + int(cantidad_actual)}", parent=ventana)
+        return 
+    diferencia = nueva_cantidad - int(cantidad_actual)
+    producto_stock["cantidad"] -= diferencia # Actualizar stock
+
+    for p in venta_actual:
+        if str(p["codigo"]) == str(codigo):
+            p["cantidad"] = nueva_cantidad
+            p["subtotal"] = nueva_cantidad * p["precio"]
+
+    actualizar_venta_treeview(venta_actual, tree_venta, etiqueta_total_base, etiqueta_total_final, etiqueta_vuelto)
  
 def abrir_nueva_venta(parent, stock, historial_ventas, buscar_producto, guardar_datos):
  
@@ -587,14 +623,28 @@ def abrir_nueva_venta(parent, stock, historial_ventas, buscar_producto, guardar_
     scroll_venta.pack(side="right", fill="y")
     tree_venta.pack(fill="both", expand=True)
  
+    frame_botones = ttk.Frame(frame_main)
+    frame_botones.pack(fill='x', pady=5)
+
     ttk.Button(
-        frame_main,
+        frame_botones,
         text="Eliminar Producto Seleccionado",
         command=lambda: eliminar_producto_de_venta(
             ventana, venta_actual, tree_venta,
             stock, buscar_producto, guardar_datos,
             etiqueta_total_base, etiqueta_total_final, etiqueta_vuelto
-        )).pack(fill='x', pady=5)
+        )
+    ).pack(side='left', expand=True, fill='x', padx=5)
+
+    ttk.Button(
+        frame_botones,
+        text="Modificar cantidad del producto",
+        command=lambda: modificar_cantidad_venta(
+        ventana, venta_actual, tree_venta,
+        stock, buscar_producto, guardar_datos,
+        etiqueta_total_base, etiqueta_total_final, etiqueta_vuelto
+    )
+    ).pack(side='left', expand=True, fill='x', padx=5)
  
     frame_totales = ttk.Frame(frame_main)
     frame_totales.pack(fill='x', pady=10)
