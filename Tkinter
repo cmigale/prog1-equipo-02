@@ -83,6 +83,16 @@ def ventanabusqueda(parent,stock):
                command=lambda: visualizarinfo(ent.get(), dlg, stock)
     ).grid(row=1, column=1, padx=6, pady=8, sticky="e")
 
+def generar_codigo(stock):
+    cod=random.randint(100000, 999999)
+    repetido=False
+    for p in stock:
+        if p["codigo"] == cod:
+            repetido = True
+    if repetido==True:
+        return generar_codigo(stock)
+    else:
+        return cod 
 
 def guardar(name, quant, price, tree, stock, dlg):
     """Guarda el producto del diálogo de alta """
@@ -99,14 +109,7 @@ def guardar(name, quant, price, tree, stock, dlg):
     if buscar_producto(nombre) is not None:
         messagebox.showerror("Error", "El producto ya se encuentra en stock")
         return
-    codigo = random.randint(100000, 999999)
-    repetido = True
-    while repetido:
-        repetido = False  
-        for p in stock:
-            if p["codigo"] == codigo:
-                repetido = True          
-                codigo = random.randint(100000, 999999)  
+    codigo = generar_codigo(stock)  
 
     stock.append({"codigo": codigo, "producto": nombre, "cantidad": cantidad, "precio": precio})
     actualizar_tabla(tree)
