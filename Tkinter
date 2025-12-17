@@ -825,7 +825,7 @@ clientes = cargar_datos("clientes.json", {})
 def normalizar_nombre(txt):
     return str(txt).strip().lower()
 
-def validar_email(email: str) -> bool:
+def validar_email(email):
     email = str(email).strip().lower()
 
     # Debe contener exactamente un @
@@ -841,16 +841,6 @@ def validar_email(email: str) -> bool:
     # El dominio debe contener al menos un punto
     if "." not in dominio:
         return False
-
-    # No puede empezar ni terminar con caracteres inválidos
-    if email.startswith("@") or email.endswith("@") or email.endswith("."):
-        return False
-
-    # Dominios permitidos
-    dominios_permitidos = (
-        "gmail.com", "hotmail.com", "yahoo.com",
-        "outlook.com", "icloud.com", "uade.edu.ar"
-    )
 
     if dominio not in dominios_permitidos:
         return False
