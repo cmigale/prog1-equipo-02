@@ -825,6 +825,39 @@ clientes = cargar_datos("clientes.json", {})
 def normalizar_nombre(txt):
     return str(txt).strip().lower()
 
+def validar_email(email: str) -> bool:
+    email = str(email).strip().lower()
+
+    # Debe contener exactamente un @
+    if email.count("@") != 1:
+        return False
+
+    usuario, dominio = email.split("@")
+
+    # Usuario y dominio no pueden estar vacíos
+    if not usuario or not dominio:
+        return False
+
+    # El dominio debe contener al menos un punto
+    if "." not in dominio:
+        return False
+
+    # No puede empezar ni terminar con caracteres inválidos
+    if email.startswith("@") or email.endswith("@") or email.endswith("."):
+        return False
+
+    # Dominios permitidos
+    dominios_permitidos = (
+        "gmail.com", "hotmail.com", "yahoo.com",
+        "outlook.com", "icloud.com", "uade.edu.ar"
+    )
+
+    if dominio not in dominios_permitidos:
+        return False
+
+    return True
+
+
 # ---------------- FUNCIONES CLIENTES ----------------
 def actualizar_tabla_clientes(tree):
     tree.delete(*tree.get_children())
@@ -839,6 +872,14 @@ def registrar_cliente_confirmar(dlg, nombre, v_dni, v_tel, v_mail, tree):
     dni = v_dni.get().strip().lower()
     telefono = v_tel.get().strip().lower()
     mail = v_mail.get().strip().lower()
+
+    if not validar_email(mail):
+        messagebox.showerror(
+            "Error",
+            "Mail inválido. Ingresá un mail válido (gmail, hotmail, yahoo, outlook, etc.)."
+        )
+        return
+
 
     ok = messagebox.askyesno(
         "Verificar datos",
@@ -856,6 +897,7 @@ def registrar_cliente_confirmar(dlg, nombre, v_dni, v_tel, v_mail, tree):
     messagebox.showinfo("Éxito", "Cliente registrado correctamente.")
     dlg.destroy()
     actualizar_tabla_clientes(tree)
+    
 
 
 def registrar_cliente_gui(ventana, nombre, tree):
