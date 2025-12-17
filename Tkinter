@@ -842,6 +842,12 @@ def validar_email(email):
     if "." not in dominio:
         return False
 
+    # Dominios permitidos
+    dominios_permitidos = (
+        "gmail.com", "hotmail.com", "yahoo.com",
+        "outlook.com", "icloud.com", "uade.edu.ar"
+    )
+
     if dominio not in dominios_permitidos:
         return False
 
